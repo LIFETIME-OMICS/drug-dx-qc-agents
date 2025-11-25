@@ -1,0 +1,2747 @@
+{
+  "amlodipine": {
+    "code": "C08CA01",
+    "drug_name": "amlodipine",
+    "who_name": "amlodipine",
+    "drug_class": "Calcium channel blockers, dihydropyridine derivatives",
+    "drug_classcode": "C08CA",
+    "therapeutic_category": "Calcium channel blockers",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Angina pectoris",
+    "icd10_codes": [
+      "I10",
+      "I20.9",
+      "I20.8"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "I20.9": "Angina pectoris, unspecified",
+      "I20.8": "Other forms of angina pectoris"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "I20-I25"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:16:58.803157"
+  },
+  "lisinopril": {
+    "code": "C09AA03",
+    "drug_name": "lisinopril",
+    "who_name": "lisinopril",
+    "drug_class": "ACE inhibitors, plain",
+    "drug_classcode": "C09AA",
+    "therapeutic_category": "Agents acting on the renin-angiotensin system",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Heart Failure/Post-Myocardial Infarction",
+    "icd10_codes": [
+      "I10",
+      "I50.9",
+      "I25.2"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "I50.9": "Heart failure, unspecified",
+      "I25.2": "Old myocardial infarction"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "I20-I25",
+      "I30-I52"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:17:18.257533"
+  },
+  "penicillin v": {
+    "code": "J01CE02",
+    "drug_name": "Phenoxymethylpenicillin",
+    "who_name": "phenoxymethylpenicillin",
+    "drug_class": "ATC class J01CE",
+    "drug_classcode": "J01CE",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Streptococcal pharyngitis/Acute otitis media/Erysipelas/Cellulitis",
+    "icd10_codes": [
+      "J02.0",
+      "H66.9",
+      "A46",
+      "L03.90"
+    ],
+    "icd10_descriptions": {
+      "J02.0": "Streptococcal pharyngitis",
+      "H66.9": "Otitis media, unspecified",
+      "A46": "Erysipelas",
+      "L03.90": "Cellulitis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "H60-H95",
+      "L00-L08"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:18:00.551629",
+    "original_name": "penicillin v"
+  },
+  "loratadine": {
+    "code": "R06AX13",
+    "drug_name": "loratadine",
+    "who_name": "loratadine",
+    "drug_class": "ATC class R06AX",
+    "drug_classcode": "R06AX",
+    "therapeutic_category": "Antihistamines for systemic use",
+    "anatomical_group": "R",
+    "indication": "Allergic rhinitis/Chronic idiopathic urticaria",
+    "icd10_codes": [
+      "J30.1",
+      "J30.3",
+      "J30.4",
+      "L50.1"
+    ],
+    "icd10_descriptions": {
+      "J30.1": "Allergic rhinitis due to pollen",
+      "J30.3": "Other allergic rhinitis",
+      "J30.4": "Allergic rhinitis, unspecified",
+      "L50.1": "Idiopathic urticaria"
+    },
+    "indication_icd10_ranges": [
+      "J30-J39",
+      "L50-L54"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:42:22.509507"
+  },
+  "epinephrine": {
+    "code": "A01AD01",
+    "drug_name": "epinephrine",
+    "who_name": "epinephrine",
+    "drug_class": "ATC class A01AD",
+    "drug_classcode": "A01AD",
+    "therapeutic_category": "Therapeutic category A01",
+    "anatomical_group": "A",
+    "indication": "Anaphylaxis/Cardiac Arrest/Severe Acute Asthma/Acute Obstructive Laryngitis (Croup)",
+    "icd10_codes": [
+      "T78.2",
+      "I46.9",
+      "J45.901",
+      "J05.0"
+    ],
+    "icd10_descriptions": {
+      "T78.2": "Anaphylactic shock, unspecified",
+      "I46.9": "Cardiac arrest, unspecified",
+      "J45.901": "Unspecified asthma with (acute) exacerbation",
+      "J05.0": "Acute obstructive laryngitis [croup]"
+    },
+    "indication_icd10_ranges": [
+      "T00-T98",
+      "I00-I99",
+      "J00-J99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:42:43.848896"
+  },
+  "fluticasone propionate": {
+    "code": "R03BA05",
+    "class": "Glucocorticoids",
+    "therapeutic_category": "Drugs for obstructive airway diseases",
+    "indication": "Management of asthma and chronic obstructive pulmonary disease (COPD)",
+    "icd10_codes": [
+      "J45.909",
+      "J44.9"
+    ],
+    "icd10_descriptions": {
+      "J45.909": "Asthma, unspecified, uncomplicated",
+      "J44.9": "Chronic obstructive pulmonary disease, unspecified"
+    },
+    "drug_name": "fluticasone propionate",
+    "classcode": "R03BA",
+    "anatomical_group": "R",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:44:04.726605"
+  },
+  "albuterol": {
+    "code": "R03AC02",
+    "drug_name": "salbutamol",
+    "who_name": "salbutamol",
+    "drug_class": "Selective beta-2-adrenoreceptor agonists",
+    "drug_classcode": "R03AC",
+    "therapeutic_category": "Drugs for obstructive airway diseases",
+    "anatomical_group": "R",
+    "indication": "Asthma/Chronic obstructive pulmonary disease/Bronchospasm/Exercise-induced bronchospasm",
+    "icd10_codes": [
+      "J45.90",
+      "J45.901",
+      "J44.9",
+      "J45.998"
+    ],
+    "icd10_descriptions": {
+      "J45.90": "Asthma, unspecified",
+      "J45.901": "Unspecified asthma with (acute) exacerbation",
+      "J44.9": "Chronic obstructive pulmonary disease, unspecified",
+      "J45.998": "Other specified asthma"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:44:34.029628",
+    "original_name": "albuterol"
+  },
+  "ibuprofen": {
+    "code": "C01EB16",
+    "drug_name": "ibuprofen",
+    "who_name": "ibuprofen",
+    "drug_class": "ATC class C01EB",
+    "drug_classcode": "C01EB",
+    "therapeutic_category": "Therapeutic category C01",
+    "anatomical_group": "C",
+    "indication": "Pain/Inflammation/Fever",
+    "icd10_codes": [
+      "R52.9",
+      "M19.90",
+      "M79.1",
+      "R50.9"
+    ],
+    "icd10_descriptions": {
+      "R52.9": "Pain, unspecified",
+      "M19.90": "Osteoarthritis, unspecified, unspecified site",
+      "M79.1": "Myalgia",
+      "R50.9": "Fever, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "R00-R99",
+      "M00-M99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:44:54.060464"
+  },
+  "hydrocortisone": {
+    "code": "A01AC03",
+    "drug_name": "hydrocortisone",
+    "who_name": "hydrocortisone",
+    "drug_class": "ATC class A01AC",
+    "drug_classcode": "A01AC",
+    "therapeutic_category": "Therapeutic category A01",
+    "anatomical_group": "A",
+    "indication": "Adrenal insufficiency/Severe inflammatory and allergic conditions/Autoimmune diseases",
+    "icd10_codes": [
+      "E27.1",
+      "J45.9",
+      "M05.9",
+      "K50.9"
+    ],
+    "icd10_descriptions": {
+      "E27.1": "Primary adrenal insufficiency",
+      "J45.9": "Asthma, unspecified",
+      "M05.9": "Rheumatoid arthritis, unspecified",
+      "K50.9": "Crohn's disease, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "E20-E35",
+      "J00-J99",
+      "M00-M99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:45:20.419147"
+  },
+  "naproxen": {
+    "code": "G02CC02",
+    "drug_name": "naproxen",
+    "who_name": "naproxen",
+    "drug_class": "ATC class G02CC",
+    "drug_classcode": "G02CC",
+    "therapeutic_category": "Therapeutic category G02",
+    "anatomical_group": "G",
+    "indication": "Pain and inflammation/Rheumatic diseases/Dysmenorrhea/Gout",
+    "icd10_codes": [
+      "M79.1",
+      "M25.50",
+      "M06.9",
+      "N94.6"
+    ],
+    "icd10_descriptions": {
+      "M79.1": "Myalgia",
+      "M25.50": "Pain in unspecified joint",
+      "M06.9": "Rheumatoid arthritis, unspecified",
+      "N94.6": "Dysmenorrhoea, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "M00-M99",
+      "N00-N99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:45:50.591785"
+  },
+  "acetaminophen oxycodone": {
+    "code": "N02AJ06",
+    "class": "Opioids in combination with other non-opioid analgesics",
+    "therapeutic_category": "Analgesics",
+    "indication": "Relief of moderate to severe pain",
+    "icd10_codes": [
+      "G89.1",
+      "G89.2",
+      "R52"
+    ],
+    "icd10_descriptions": {
+      "G89.1": "Acute pain, not elsewhere classified",
+      "G89.2": "Chronic pain, not elsewhere classified",
+      "R52": "Pain, unspecified"
+    },
+    "drug_name": "acetaminophen oxycodone",
+    "classcode": "N02AJ",
+    "anatomical_group": "N",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:47:15.952388"
+  },
+  "oxycodone": {
+    "code": "N02AA05",
+    "drug_name": "oxycodone",
+    "who_name": "oxycodone",
+    "drug_class": "Natural opium alkaloids",
+    "drug_classcode": "N02AA",
+    "therapeutic_category": "Analgesics",
+    "anatomical_group": "N",
+    "indication": "Moderate to severe pain",
+    "icd10_codes": [
+      "G89.1",
+      "G89.2",
+      "G89.3",
+      "G89.4"
+    ],
+    "icd10_descriptions": {
+      "G89.1": "Acute pain, not elsewhere classified",
+      "G89.2": "Chronic pain, not elsewhere classified",
+      "G89.3": "Neoplasm related pain (acute)",
+      "G89.4": "Chronic pain syndrome"
+    },
+    "indication_icd10_ranges": [
+      "G80-G89",
+      "G00-G99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:47:28.284057"
+  },
+  "acetaminophen hydrocodone": {
+    "code": "N02AJ06",
+    "class": "Opioids in combination with non-opioid analgesics",
+    "therapeutic_category": "Analgesics",
+    "indication": "Moderate to severe pain",
+    "icd10_codes": [
+      "R52.0",
+      "R52.2",
+      "G89.18"
+    ],
+    "icd10_descriptions": {
+      "R52.0": "Acute pain",
+      "R52.2": "Other chronic pain",
+      "G89.18": "Other acute post-procedural pain"
+    },
+    "drug_name": "acetaminophen hydrocodone",
+    "classcode": "N02AJ",
+    "anatomical_group": "N",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:48:41.382101"
+  },
+  "acetaminophen dextromethorphan doxylamine": {
+    "code": "R05XA65",
+    "class": "Paracetamol, dextromethorphan and doxylamine",
+    "therapeutic_category": "Cough and cold preparations",
+    "indication": "Symptomatic relief of cold and flu symptoms (e.g., fever, pain, cough, sneezing, runny nose, sore throat)",
+    "icd10_codes": [
+      "J00",
+      "J11.1"
+    ],
+    "icd10_descriptions": {
+      "J00": "Acute nasopharyngitis [common cold]",
+      "J11.1": "Influenza, virus not identified, with other specified respiratory manifestations"
+    },
+    "drug_name": "acetaminophen dextromethorphan doxylamine",
+    "classcode": "R05XA",
+    "anatomical_group": "R",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:49:41.653929"
+  },
+  "amoxicillin clavulanate": {
+    "code": "J01CR02",
+    "class": "Amoxicillin and beta-lactamase inhibitor",
+    "therapeutic_category": "Antibacterial for systemic use",
+    "indication": "Bacterial infections (e.g., acute otitis media, acute bacterial sinusitis, community-acquired pneumonia, skin and soft tissue infections, urinary tract infections)",
+    "icd10_codes": [
+      "J01.90",
+      "J18.9",
+      "N39.0"
+    ],
+    "icd10_descriptions": {
+      "J01.90": "Acute sinusitis, unspecified",
+      "J18.9": "Pneumonia, unspecified organism",
+      "N39.0": "Urinary tract infection, site not specified"
+    },
+    "drug_name": "amoxicillin clavulanate",
+    "classcode": "J01CR",
+    "anatomical_group": "J",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:50:39.835946"
+  },
+  "acetaminophen": {
+    "code": "N02BE01",
+    "drug_name": "Paracetamol",
+    "who_name": "paracetamol",
+    "drug_class": "Anilides",
+    "drug_classcode": "N02BE",
+    "therapeutic_category": "Analgesics",
+    "anatomical_group": "N",
+    "indication": "Pain relief/Fever reduction",
+    "icd10_codes": [
+      "R50.9",
+      "R51",
+      "R52.9",
+      "M79.1"
+    ],
+    "icd10_descriptions": {
+      "R50.9": "Fever, unspecified",
+      "R51": "Headache",
+      "R52.9": "Pain, unspecified",
+      "M79.1": "Myalgia"
+    },
+    "indication_icd10_ranges": [
+      "R00-R99",
+      "M00-M99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:51:09.992706",
+    "original_name": "acetaminophen"
+  },
+  "ferrous": {
+    "code": "B03AD01",
+    "drug_name": "ferrous",
+    "who_name": "ferrous amino acid complex and folic acid",
+    "drug_class": "ATC class B03AD",
+    "drug_classcode": "B03AD",
+    "therapeutic_category": "Therapeutic category B03",
+    "anatomical_group": "B",
+    "indication": "Iron deficiency anemia",
+    "icd10_codes": [
+      "D50.9",
+      "D50.0",
+      "D50.8"
+    ],
+    "icd10_descriptions": {
+      "D50.9": "Iron deficiency anemia, unspecified",
+      "D50.0": "Iron deficiency anemia secondary to chronic blood loss",
+      "D50.8": "Other iron deficiency anemias"
+    },
+    "indication_icd10_ranges": [
+      "D50-D53",
+      "D50-D89"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:51:29.404421"
+  },
+  "prednisone": {
+    "code": "A07EA03",
+    "drug_name": "prednisone",
+    "who_name": "prednisone",
+    "drug_class": "ATC class A07EA",
+    "drug_classcode": "A07EA",
+    "therapeutic_category": "Therapeutic category A07",
+    "anatomical_group": "A",
+    "indication": "Inflammatory and Autoimmune Disorders/Allergic Conditions/Respiratory Diseases/Rheumatic Disorders",
+    "icd10_codes": [
+      "J45.9",
+      "M05.9",
+      "M32.9",
+      "K50.9"
+    ],
+    "icd10_descriptions": {
+      "J45.9": "Asthma, unspecified",
+      "M05.9": "Rheumatoid arthritis, unspecified",
+      "M32.9": "Systemic lupus erythematosus, unspecified",
+      "K50.9": "Crohn's disease, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "M00-M99",
+      "K00-K95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:51:48.975639"
+  },
+  "natazia day pack": {
+    "code": "G03AB16",
+    "class": "Progestogens and estrogens, fixed combinations",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Contraception; Treatment of heavy menstrual bleeding",
+    "icd10_codes": [
+      "Z30.430",
+      "N92.0"
+    ],
+    "icd10_descriptions": {
+      "Z30.430": "Encounter for contraceptive management, oral contraceptives",
+      "N92.0": "Excessive and frequent menstruation with irregular cycle"
+    },
+    "drug_name": "natazia day pack",
+    "classcode": "G03AB",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:53:18.642083"
+  },
+  "levonorgestrel": {
+    "code": "G03AC03",
+    "drug_name": "levonorgestrel",
+    "who_name": "levonorgestrel",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Contraception/Emergency Contraception/Heavy Menstrual Bleeding/Endometriosis",
+    "icd10_codes": [
+      "Z30.0",
+      "Z30.011",
+      "N92.0",
+      "N80.9"
+    ],
+    "icd10_descriptions": {
+      "Z30.0": "Encounter for contraceptive management",
+      "Z30.011": "Encounter for emergency contraceptive counseling and prescription",
+      "N92.0": "Excessive and frequent menstruation with regular cycle",
+      "N80.9": "Endometriosis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "Z30-Z39",
+      "N80-N98"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:53:30.642380"
+  },
+  "seasonique day pack": {
+    "code": "G03AA07",
+    "class": "Levonorgestrel and ethinylestradiol",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Contraception (prevention of pregnancy)",
+    "icd10_codes": [
+      "Z30.012",
+      "Z30.011"
+    ],
+    "icd10_descriptions": {
+      "Z30.012": "Encounter for routine contraceptive pill management",
+      "Z30.011": "Encounter for initial prescription of oral contraceptive pills"
+    },
+    "drug_name": "seasonique day pack",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:54:43.150218"
+  },
+  "piperacillin tazobactam": {
+    "code": "J01CR05",
+    "class": "Combinations of penicillins, incl. beta-lactamase inhibitors",
+    "therapeutic_category": "Beta-lactam antibacterials, penicillins",
+    "indication": "Treatment of severe bacterial infections including hospital-acquired pneumonia, complicated intra-abdominal infections, complicated urinary tract infections, skin and soft tissue infections, and febrile neutropenia.",
+    "icd10_codes": [
+      "A41.9",
+      "J15.9",
+      "K65.0"
+    ],
+    "icd10_descriptions": {
+      "A41.9": "Sepsis, unspecified organism",
+      "J15.9": "Bacterial pneumonia, unspecified",
+      "K65.0": "Acute peritonitis"
+    },
+    "drug_name": "piperacillin tazobactam",
+    "classcode": "J01CR",
+    "anatomical_group": "J",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:55:29.884689"
+  },
+  "vancomycin": {
+    "code": "A07AA09",
+    "drug_name": "vancomycin",
+    "who_name": "vancomycin",
+    "drug_class": "ATC class A07AA",
+    "drug_classcode": "A07AA",
+    "therapeutic_category": "Therapeutic category A07",
+    "anatomical_group": "A",
+    "indication": "Clostridioides difficile infection / Pseudomembranous colitis",
+    "icd10_codes": [
+      "A04.7",
+      "A04.8"
+    ],
+    "icd10_descriptions": {
+      "A04.7": "Enterocolitis due to Clostridium difficile",
+      "A04.8": "Other specified bacterial intestinal infections"
+    },
+    "indication_icd10_ranges": [
+      "A00-A09",
+      "A04"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:55:40.964671"
+  },
+  "norepinephrine": {
+    "code": "C01CA03",
+    "drug_name": "norepinephrine",
+    "who_name": "norepinephrine",
+    "drug_class": "ATC class C01CA",
+    "drug_classcode": "C01CA",
+    "therapeutic_category": "Therapeutic category C01",
+    "anatomical_group": "C",
+    "indication": "Acute hypotensive states/Shock (e.g., septic shock, cardiogenic shock, neurogenic shock)",
+    "icd10_codes": [
+      "R57.0",
+      "R65.21",
+      "R57.8",
+      "R57.9"
+    ],
+    "icd10_descriptions": {
+      "R57.0": "Cardiogenic shock",
+      "R65.21": "Severe sepsis with septic shock",
+      "R57.8": "Other shock",
+      "R57.9": "Shock, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "I00-I99",
+      "R00-R99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:56:12.795400"
+  },
+  "estrostep fe day pack": {
+    "code": "G03AA05",
+    "class": "Norethisterone and estrogen",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Prevention of pregnancy; Treatment of moderate acne vulgaris in females requiring contraception",
+    "icd10_codes": [
+      "Z30.012",
+      "L70.0"
+    ],
+    "icd10_descriptions": {
+      "Z30.012": "Encounter for routine prescription of oral contraceptives",
+      "L70.0": "Acne vulgaris"
+    },
+    "drug_name": "estrostep fe day pack",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:57:33.306569"
+  },
+  "nitroglycerin": {
+    "code": "C01DA02",
+    "drug_name": "Glyceryl trinitrate",
+    "who_name": "glyceryl trinitrate",
+    "drug_class": "ATC class C01DA",
+    "drug_classcode": "C01DA",
+    "therapeutic_category": "Therapeutic category C01",
+    "anatomical_group": "C",
+    "indication": "Angina pectoris/Acute myocardial infarction/Acute heart failure",
+    "icd10_codes": [
+      "I20.9",
+      "I21.9",
+      "I50.1",
+      "I50.9"
+    ],
+    "icd10_descriptions": {
+      "I20.9": "Angina pectoris, unspecified",
+      "I21.9": "Acute myocardial infarction, unspecified",
+      "I50.1": "Left ventricular failure",
+      "I50.9": "Heart failure, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "I20-I25",
+      "I50-I52"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:58:01.354671",
+    "original_name": "nitroglycerin"
+  },
+  "fexofenadine": {
+    "code": "R06AX26",
+    "drug_name": "fexofenadine",
+    "who_name": "fexofenadine",
+    "drug_class": "ATC class R06AX",
+    "drug_classcode": "R06AX",
+    "therapeutic_category": "Antihistamines for systemic use",
+    "anatomical_group": "R",
+    "indication": "Seasonal allergic rhinitis/Chronic idiopathic urticaria",
+    "icd10_codes": [
+      "J30.1",
+      "L50.1",
+      "H10.10"
+    ],
+    "icd10_descriptions": {
+      "J30.1": "Allergic rhinitis due to pollen",
+      "L50.1": "Idiopathic urticaria",
+      "H10.10": "Acute atopic conjunctivitis, unspecified eye"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "L00-L99",
+      "H00-H59"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:58:19.991705"
+  },
+  "ortho tri-cyclen day pack": {
+    "code": "G03AA11",
+    "class": "Progestogens and estrogens, fixed combinations",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Prevention of pregnancy (contraception), treatment of moderate acne vulgaris in women who desire contraception",
+    "icd10_codes": [
+      "Z30.011",
+      "L70.0"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for initial prescription of oral contraceptives",
+      "L70.0": "Acne vulgaris"
+    },
+    "drug_name": "ortho tri-cyclen day pack",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T17:59:35.975484"
+  },
+  "medroxyprogesterone": {
+    "code": "G03AC06",
+    "drug_name": "medroxyprogesterone",
+    "who_name": "medroxyprogesterone",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Contraception/Abnormal uterine bleeding/Endometriosis/Amenorrhea",
+    "icd10_codes": [
+      "Z30.09",
+      "N92.1",
+      "N80.9",
+      "N91.2"
+    ],
+    "icd10_descriptions": {
+      "Z30.09": "Encounter for other contraceptive management",
+      "N92.1": "Excessive or frequent menstruation with irregular cycle",
+      "N80.9": "Endometriosis, unspecified",
+      "N91.2": "Amenorrhea, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "Z30-Z39",
+      "N80-N99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:59:48.008375"
+  },
+  "clopidogrel": {
+    "code": "B01AC04",
+    "drug_name": "clopidogrel",
+    "who_name": "clopidogrel",
+    "drug_class": "Platelet aggregation inhibitors",
+    "drug_classcode": "B01AC",
+    "therapeutic_category": "Antithrombotic agents",
+    "anatomical_group": "B",
+    "indication": "Prevention of atherothrombotic events in patients with a history of myocardial infarction, stroke, or peripheral arterial disease/Acute coronary syndrome/Prevention of stent thrombosis post-percutaneous coronary intervention",
+    "icd10_codes": [
+      "I21.9",
+      "I25.2",
+      "I63.9",
+      "I70.2"
+    ],
+    "icd10_descriptions": {
+      "I21.9": "Acute myocardial infarction, unspecified",
+      "I25.2": "Old myocardial infarction",
+      "I63.9": "Cerebral infarction, unspecified",
+      "I70.2": "Atherosclerosis of arteries of extremities"
+    },
+    "indication_icd10_ranges": [
+      "I20-I25",
+      "I60-I69",
+      "I70-I79"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:00:12.114133"
+  },
+  "alteplase": {
+    "code": "B01AD02",
+    "drug_name": "alteplase",
+    "who_name": "alteplase",
+    "drug_class": "ATC class B01AD",
+    "drug_classcode": "B01AD",
+    "therapeutic_category": "Antithrombotic agents",
+    "anatomical_group": "B",
+    "indication": "Acute myocardial infarction/Acute ischemic stroke/Acute massive pulmonary embolism",
+    "icd10_codes": [
+      "I21.9",
+      "I63.9",
+      "I26.0",
+      "I26.9"
+    ],
+    "icd10_descriptions": {
+      "I21.9": "Acute myocardial infarction, unspecified",
+      "I63.9": "Cerebral infarction, unspecified",
+      "I26.0": "Pulmonary embolism with acute cor pulmonale",
+      "I26.9": "Pulmonary embolism without acute cor pulmonale"
+    },
+    "indication_icd10_ranges": [
+      "I20-I25",
+      "I60-I69",
+      "I26-I28"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:00:33.911830"
+  },
+  "yaz day pack": {
+    "code": "G03AA12",
+    "class": "Progestogens and estrogens, fixed combinations",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Hormonal contraception",
+    "icd10_codes": [
+      "Z30.011",
+      "L70.0",
+      "F32.81"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for initial prescription of oral contraceptives",
+      "L70.0": "Acne vulgaris",
+      "F32.81": "Premenstrual dysphoric disorder"
+    },
+    "drug_name": "yaz day pack",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:01:35.128552"
+  },
+  "levora . day pack": {
+    "code": "G03AC03",
+    "drug_name": "levonorgestrel",
+    "who_name": "levonorgestrel",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Contraception/Heavy menstrual bleeding/Prevention of endometrial hyperplasia",
+    "icd10_codes": [
+      "Z30.01",
+      "Z30.02",
+      "N92.0",
+      "N85.0"
+    ],
+    "icd10_descriptions": {
+      "Z30.01": "Encounter for initial prescription of contraceptive pills",
+      "Z30.02": "Encounter for initial insertion of intrauterine contraceptive device",
+      "N92.0": "Excessive and frequent menstruation with irregular cycle",
+      "N85.0": "Endometrial hyperplasia"
+    },
+    "indication_icd10_ranges": [
+      "Z30-Z39",
+      "N80-N98"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:02:09.413845",
+    "original_name": "levora . day pack"
+  },
+  "heparin porcine": {
+    "code": "B01AB",
+    "drug_name": "Heparin",
+    "who_name": "heparin group",
+    "drug_class": "ATC class B01AB",
+    "drug_classcode": "B01AB",
+    "therapeutic_category": "Antithrombotic agents",
+    "anatomical_group": "B",
+    "indication": "Prevention and treatment of venous thromboembolism/Treatment of acute coronary syndromes",
+    "icd10_codes": [
+      "I26.9",
+      "I82.40",
+      "I20.0",
+      "I21.4"
+    ],
+    "icd10_descriptions": {
+      "I26.9": "Pulmonary embolism without acute cor pulmonale",
+      "I82.40": "Acute embolism and thrombosis of unspecified deep veins of lower extremity, unspecified",
+      "I20.0": "Unstable angina",
+      "I21.4": "Non-ST elevation (NSTEMI) myocardial infarction"
+    },
+    "indication_icd10_ranges": [
+      "I20-I25",
+      "I26-I28",
+      "I80-I89"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:02:52.768689",
+    "original_name": "heparin porcine"
+  },
+  "ondansetron": {
+    "code": "A04AA01",
+    "drug_name": "ondansetron",
+    "who_name": "ondansetron",
+    "drug_class": "ATC class A04AA",
+    "drug_classcode": "A04AA",
+    "therapeutic_category": "Therapeutic category A04",
+    "anatomical_group": "A",
+    "indication": "Prevention and treatment of chemotherapy-induced nausea and vomiting/Prevention and treatment of radiotherapy-induced nausea and vomiting/Prevention and treatment of postoperative nausea and vomiting",
+    "icd10_codes": [
+      "R11.2",
+      "R11.0",
+      "R11.10"
+    ],
+    "icd10_descriptions": {
+      "R11.2": "Nausea with vomiting, unspecified",
+      "R11.0": "Nausea",
+      "R11.10": "Vomiting, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "R10-R19",
+      "R00-R99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:03:17.086781"
+  },
+  "morphine": {
+    "code": "N02AA01",
+    "drug_name": "morphine",
+    "who_name": "morphine",
+    "drug_class": "Natural opium alkaloids",
+    "drug_classcode": "N02AA",
+    "therapeutic_category": "Analgesics",
+    "anatomical_group": "N",
+    "indication": "Severe acute and chronic pain/Pain associated with acute myocardial infarction/Dyspnoea in palliative care",
+    "icd10_codes": [
+      "G89.1",
+      "G89.2",
+      "I21.9",
+      "R06.0"
+    ],
+    "icd10_descriptions": {
+      "G89.1": "Acute pain, not elsewhere classified",
+      "G89.2": "Chronic pain, not elsewhere classified",
+      "I21.9": "Acute myocardial infarction, unspecified",
+      "R06.0": "Dyspnoea"
+    },
+    "indication_icd10_ranges": [
+      "G89-G99",
+      "I20-I25",
+      "R00-R09"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:03:42.856728"
+  },
+  "midazolam": {
+    "code": "N05CD08",
+    "drug_name": "midazolam",
+    "who_name": "midazolam",
+    "drug_class": "ATC class N05CD",
+    "drug_classcode": "N05CD",
+    "therapeutic_category": "Psycholeptics",
+    "anatomical_group": "N",
+    "indication": "Procedural Sedation/Anesthesia Induction/Treatment of Acute Seizures and Status Epilepticus/Management of Acute Agitation",
+    "icd10_codes": [
+      "F41.9",
+      "R45.1",
+      "G40.509"
+    ],
+    "icd10_descriptions": {
+      "F41.9": "Anxiety disorder, unspecified",
+      "R45.1": "Restlessness and agitation",
+      "G40.509": "Status epilepticus, unspecified, not intractable, without status epilepticus"
+    },
+    "indication_icd10_ranges": [
+      "F40-F48",
+      "R40-R46",
+      "G40-G47"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:04:04.461322"
+  },
+  "propofol": {
+    "code": "N01AX10",
+    "drug_name": "propofol",
+    "who_name": "propofol",
+    "drug_class": "ATC class N01AX",
+    "drug_classcode": "N01AX",
+    "therapeutic_category": "Therapeutic category N01",
+    "anatomical_group": "N",
+    "indication": "Induction and maintenance of general anesthesia / Sedation for diagnostic and surgical procedures / Sedation of mechanically ventilated patients in intensive care units",
+    "icd10_codes": [
+      "Z01.818",
+      "Z41.8",
+      "Z51.9"
+    ],
+    "icd10_descriptions": {
+      "Z01.818": "Encounter for other specified special examinations",
+      "Z41.8": "Encounter for other specified procedures for purposes other than remedying health state",
+      "Z51.9": "Encounter for other medical care, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "Z00-Z99",
+      "Z00-Z13",
+      "Z40-Z53"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:04:34.060320"
+  },
+  "rocuronium": {
+    "code": "M03AC09",
+    "drug_name": "rocuronium",
+    "who_name": "rocuronium bromide",
+    "drug_class": "ATC class M03AC",
+    "drug_classcode": "M03AC",
+    "therapeutic_category": "Therapeutic category M03",
+    "anatomical_group": "M",
+    "indication": "Facilitation of tracheal intubation/Skeletal muscle relaxation for surgical procedures/Skeletal muscle relaxation for mechanical ventilation in intensive care",
+    "icd10_codes": [
+      "J96.00",
+      "R09.2",
+      "A41.9",
+      "R57.9"
+    ],
+    "icd10_descriptions": {
+      "J96.00": "Acute respiratory failure, unspecified whether with hypoxia or hypercapnia",
+      "R09.2": "Respiratory arrest",
+      "A41.9": "Sepsis, unspecified organism",
+      "R57.9": "Shock, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "R00-R99",
+      "A00-B99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:05:21.051590"
+  },
+  "isoflurane": {
+    "code": "N01AB06",
+    "drug_name": "isoflurane",
+    "who_name": "isoflurane",
+    "drug_class": "ATC class N01AB",
+    "drug_classcode": "N01AB",
+    "therapeutic_category": "Therapeutic category N01",
+    "anatomical_group": "N",
+    "indication": "Induction and maintenance of general anesthesia for surgical and other invasive procedures",
+    "icd10_codes": [
+      "K35.80",
+      "S72.90XA",
+      "C34.90",
+      "K80.20"
+    ],
+    "icd10_descriptions": {
+      "K35.80": "Acute appendicitis, unspecified",
+      "S72.90XA": "Unspecified fracture of unspecified femur, initial encounter for closed fracture",
+      "C34.90": "Malignant neoplasm of unspecified part of unspecified bronchus or lung",
+      "K80.20": "Calculus of gallbladder without cholecystitis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "C00-D49",
+      "S00-T88",
+      "K00-K95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:05:52.659915"
+  },
+  "sufentanil": {
+    "code": "N01AH03",
+    "drug_name": "sufentanil",
+    "who_name": "sufentanil",
+    "drug_class": "ATC class N01AH",
+    "drug_classcode": "N01AH",
+    "therapeutic_category": "Therapeutic category N01",
+    "anatomical_group": "N",
+    "indication": "General anesthesia/Perioperative and post-operative analgesia/Epidural analgesia",
+    "icd10_codes": [
+      "G89.1",
+      "Z51.89",
+      "G89.18"
+    ],
+    "icd10_descriptions": {
+      "G89.1": "Acute pain, not elsewhere classified",
+      "Z51.89": "Encounter for other specified medical care",
+      "G89.18": "Other acute postprocedural pain"
+    },
+    "indication_icd10_ranges": [
+      "G89",
+      "Z00-Z99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:06:29.562384"
+  },
+  "errin day pack": {
+    "code": "G03AC01",
+    "drug_name": "Norethisterone",
+    "who_name": "norethisterone",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Dysfunctional uterine bleeding/Endometriosis/Secondary amenorrhoea/Contraception",
+    "icd10_codes": [
+      "N92.1",
+      "N80.9",
+      "N91.1",
+      "Z30.011"
+    ],
+    "icd10_descriptions": {
+      "N92.1": "Excessive and frequent menstruation with irregular cycle",
+      "N80.9": "Endometriosis, unspecified",
+      "N91.1": "Secondary amenorrhoea",
+      "Z30.011": "Encounter for contraceptive management, oral contraceptive pills"
+    },
+    "indication_icd10_ranges": [
+      "N80-N98",
+      "Z30-Z39"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:07:39.662988",
+    "original_name": "errin day pack"
+  },
+  "captopril": {
+    "code": "C09AA01",
+    "drug_name": "captopril",
+    "who_name": "captopril",
+    "drug_class": "ACE inhibitors, plain",
+    "drug_classcode": "C09AA",
+    "therapeutic_category": "Agents acting on the renin-angiotensin system",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Heart Failure/Diabetic Nephropathy/Post-Myocardial Infarction",
+    "icd10_codes": [
+      "I10",
+      "I50.0",
+      "E11.22",
+      "I25.5"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "I50.0": "Congestive heart failure",
+      "E11.22": "Type 2 diabetes mellitus with diabetic nephropathy",
+      "I25.5": "Ischemic cardiomyopathy"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "I20-I52",
+      "E10-E14"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:08:02.189639"
+  },
+  "camila day pack": {
+    "code": "G03AC01",
+    "drug_name": "norethisterone",
+    "who_name": "norethisterone",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Abnormal uterine bleeding/Endometriosis/Secondary amenorrhoea/Premenstrual syndrome",
+    "icd10_codes": [
+      "N93.9",
+      "N80.9",
+      "N91.1",
+      "N94.3"
+    ],
+    "icd10_descriptions": {
+      "N93.9": "Abnormal uterine and vaginal bleeding, unspecified",
+      "N80.9": "Endometriosis, unspecified",
+      "N91.1": "Secondary amenorrhoea",
+      "N94.3": "Premenstrual tension syndrome"
+    },
+    "indication_icd10_ranges": [
+      "N80-N98"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:08:59.138820",
+    "original_name": "camila day pack"
+  },
+  "vitamin b": {
+    "code": "A11D",
+    "drug_name": "vitamin b",
+    "who_name": "vitamin b1, plain and in combination with vitamin b6 and b12",
+    "drug_class": "Unknown class",
+    "drug_classcode": "A11D",
+    "therapeutic_category": "Therapeutic category A11",
+    "anatomical_group": "A",
+    "indication": "Deficiency of Vitamin B1, B6, or B12/Megaloblastic anemia due to B12 deficiency/Nutritional neuropathy",
+    "icd10_codes": [
+      "D51.9",
+      "E51.1",
+      "E53.1",
+      "G63.6"
+    ],
+    "icd10_descriptions": {
+      "D51.9": "Vitamin B12 deficiency anemia, unspecified",
+      "E51.1": "Beriberi",
+      "E53.1": "Pyridoxine deficiency",
+      "G63.6": "Polyneuropathy in other nutritional deficiency"
+    },
+    "indication_icd10_ranges": [
+      "D50-D53",
+      "E50-E64",
+      "G60-G64"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:09:22.147076"
+  },
+  "fluticasone propionate salmeterol": {
+    "code": "R03AK06",
+    "class": "Adrenergics in combination with corticosteroids or other drugs, excl. anticholinergics",
+    "therapeutic_category": "Drugs for obstructive airway diseases",
+    "indication": "Regular treatment of asthma and chronic obstructive pulmonary disease (COPD)",
+    "icd10_codes": [
+      "J45.9",
+      "J44.9"
+    ],
+    "icd10_descriptions": {
+      "J45.9": "Asthma, unspecified",
+      "J44.9": "Chronic obstructive pulmonary disease, unspecified"
+    },
+    "drug_name": "fluticasone propionate salmeterol",
+    "classcode": "R03AK",
+    "anatomical_group": "R",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:10:36.748315"
+  },
+  "ethinyl estradiol norelgestromin": {
+    "code": "G03AA12",
+    "class": "Progestagens and estrogens, fixed combinations",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "indication": "Contraception",
+    "icd10_codes": [
+      "Z30.09",
+      "N94.6"
+    ],
+    "icd10_descriptions": {
+      "Z30.09": "Encounter for other contraceptive management",
+      "N94.6": "Dysmenorrhea, unspecified"
+    },
+    "drug_name": "ethinyl estradiol norelgestromin",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:11:45.982978"
+  },
+  "hydrochlorothiazide": {
+    "code": "C03AA03",
+    "drug_name": "hydrochlorothiazide",
+    "who_name": "hydrochlorothiazide",
+    "drug_class": "ATC class C03AA",
+    "drug_classcode": "C03AA",
+    "therapeutic_category": "Diuretics",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Edema",
+    "icd10_codes": [
+      "I10",
+      "I50.9",
+      "N18.9",
+      "R60.9"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "I50.9": "Heart failure, unspecified",
+      "N18.9": "Chronic kidney disease, unspecified",
+      "R60.9": "Edema, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "I50-I52",
+      "N00-N19"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:11:57.116526"
+  },
+  "jolivette day pack": {
+    "code": "G03AC01",
+    "drug_name": "Norethisterone",
+    "who_name": "norethisterone",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Menstrual disorders/Endometriosis/Amenorrhoea/Contraception",
+    "icd10_codes": [
+      "N92.0",
+      "N80.9",
+      "N91.2",
+      "Z30.011"
+    ],
+    "icd10_descriptions": {
+      "N92.0": "Excessive and frequent menstruation with regular cycle",
+      "N80.9": "Endometriosis, unspecified",
+      "N91.2": "Amenorrhoea, unspecified",
+      "Z30.011": "Encounter for initial prescription of oral contraceptive"
+    },
+    "indication_icd10_ranges": [
+      "N80-N98",
+      "Z00-Z99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:12:49.283592",
+    "original_name": "jolivette day pack"
+  },
+  "mirena": {
+    "code": "G03AC03",
+    "drug_name": "levonorgestrel",
+    "who_name": "levonorgestrel",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Contraception/Emergency Contraception/Menorrhagia/Endometriosis",
+    "icd10_codes": [
+      "Z30.9",
+      "N92.0",
+      "N80.9"
+    ],
+    "icd10_descriptions": {
+      "Z30.9": "Contraceptive management, unspecified",
+      "N92.0": "Excessive and frequent menstruation with regular cycle",
+      "N80.9": "Endometriosis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "Z30-Z39",
+      "N80-N98"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:13:30.699577",
+    "original_name": "mirena"
+  },
+  "desflurane": {
+    "code": "N01AB07",
+    "drug_name": "desflurane",
+    "who_name": "desflurane",
+    "drug_class": "ATC class N01AB",
+    "drug_classcode": "N01AB",
+    "therapeutic_category": "Therapeutic category N01",
+    "anatomical_group": "N",
+    "indication": "Induction and maintenance of general anesthesia",
+    "icd10_codes": [
+      "Z01.818",
+      "Z01.89",
+      "Z04.89"
+    ],
+    "icd10_descriptions": {
+      "Z01.818": "Encounter for other preprocedural examination",
+      "Z01.89": "Encounter for other specified special examinations",
+      "Z04.89": "Encounter for examination and observation for other specified reasons"
+    },
+    "indication_icd10_ranges": [
+      "Z00-Z99",
+      "Z00-Z13",
+      "Z40-Z53"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:13:59.791717"
+  },
+  "amoxicillin": {
+    "code": "J01CA04",
+    "drug_name": "amoxicillin",
+    "who_name": "amoxicillin",
+    "drug_class": "Penicillins with extended spectrum",
+    "drug_classcode": "J01CA",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Acute Otitis Media/Acute Bacterial Sinusitis/Streptococcal Pharyngitis/Community-Acquired Pneumonia",
+    "icd10_codes": [
+      "H66.0",
+      "J01.9",
+      "J02.0",
+      "J18.9"
+    ],
+    "icd10_descriptions": {
+      "H66.0": "Acute suppurative otitis media",
+      "J01.9": "Acute sinusitis, unspecified",
+      "J02.0": "Streptococcal pharyngitis",
+      "J18.9": "Pneumonia, unspecified organism"
+    },
+    "indication_icd10_ranges": [
+      "H60-H95",
+      "J00-J99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:14:37.470904"
+  },
+  "cefuroxime": {
+    "code": "J01DC02",
+    "drug_name": "cefuroxime",
+    "who_name": "cefuroxime",
+    "drug_class": "ATC class J01DC",
+    "drug_classcode": "J01DC",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Respiratory tract infections/Urinary tract infections/Skin and soft tissue infections/Otitis media",
+    "icd10_codes": [
+      "J18.9",
+      "N30.0",
+      "L03.9",
+      "H66.9"
+    ],
+    "icd10_descriptions": {
+      "J18.9": "Pneumonia, unspecified organism",
+      "N30.0": "Acute cystitis",
+      "L03.9": "Cellulitis, unspecified",
+      "H66.9": "Otitis media, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "N00-N99",
+      "L00-L99",
+      "H60-H95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:14:58.707910"
+  },
+  "nuvaring . per day": {
+    "code": "G03AC11",
+    "class": "Progestogens and estrogens, fixed combinations",
+    "therapeutic_category": "Hormonal contraceptives",
+    "indication": "Contraception",
+    "icd10_codes": [
+      "Z30.011",
+      "Z30.430"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for initial prescription of vaginal ring contraceptive",
+      "Z30.430": "Encounter for routine use of vaginal ring contraceptive"
+    },
+    "drug_name": "nuvaring . per day",
+    "classcode": "G03AC",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:16:20.096555"
+  },
+  "simvastatin": {
+    "code": "C10AA01",
+    "drug_name": "simvastatin",
+    "who_name": "simvastatin",
+    "drug_class": "HMG CoA reductase inhibitors (Statins)",
+    "drug_classcode": "C10AA",
+    "therapeutic_category": "Lipid modifying agents",
+    "anatomical_group": "C",
+    "indication": "Hypercholesterolemia/Prevention of cardiovascular events (e.g., myocardial infarction, stroke) in patients with established cardiovascular disease or at high risk",
+    "icd10_codes": [
+      "E78.0",
+      "E78.5",
+      "I25.10",
+      "I63.9"
+    ],
+    "icd10_descriptions": {
+      "E78.0": "Pure hypercholesterolaemia",
+      "E78.5": "Hyperlipidaemia, unspecified",
+      "I25.10": "Atherosclerotic heart disease of native coronary artery without angina pectoris",
+      "I63.9": "Cerebral infarction, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "E70-E88",
+      "I00-I99",
+      "I20-I25"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:16:31.205262"
+  },
+  "insulin human isophane regular insulin human": {
+    "code": "A10AD01",
+    "class": "Insulin (human), combinations of intermediate-acting and fast-acting insulins",
+    "therapeutic_category": "Insulins and analogues",
+    "indication": "Treatment of diabetes mellitus",
+    "icd10_codes": [
+      "E10.9",
+      "E11.9"
+    ],
+    "icd10_descriptions": {
+      "E10.9": "Type 1 diabetes mellitus without complications",
+      "E11.9": "Type 2 diabetes mellitus without complications"
+    },
+    "drug_name": "insulin human isophane regular insulin human",
+    "classcode": "A10AD",
+    "anatomical_group": "A",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:17:44.726852"
+  },
+  "levofloxacin": {
+    "code": "J01MA12",
+    "drug_name": "levofloxacin",
+    "who_name": "levofloxacin",
+    "drug_class": "Fluoroquinolones",
+    "drug_classcode": "J01MA",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Bacterial Pneumonia/Acute Bacterial Sinusitis/Complicated Urinary Tract Infections/Acute Exacerbation of Chronic Bronchitis",
+    "icd10_codes": [
+      "J18.9",
+      "J01.90",
+      "N10",
+      "J44.0"
+    ],
+    "icd10_descriptions": {
+      "J18.9": "Pneumonia, unspecified organism",
+      "J01.90": "Acute sinusitis, unspecified",
+      "N10": "Acute pyelonephritis",
+      "J44.0": "Chronic obstructive pulmonary disease with acute lower respiratory infection"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "N00-N99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:17:55.866356"
+  },
+  "diazepam": {
+    "code": "N05BA01",
+    "drug_name": "diazepam",
+    "who_name": "diazepam",
+    "drug_class": "Benzodiazepine derivatives",
+    "drug_classcode": "N05BA",
+    "therapeutic_category": "Psycholeptics",
+    "anatomical_group": "N",
+    "indication": "Anxiety disorders/Alcohol withdrawal syndrome/Muscle spasm/Status epilepticus",
+    "icd10_codes": [
+      "F41.1",
+      "F10.23",
+      "M62.4",
+      "G40.5"
+    ],
+    "icd10_descriptions": {
+      "F41.1": "Generalized anxiety disorder",
+      "F10.23": "Alcohol dependence with withdrawal delirium",
+      "M62.4": "Muscle spasm",
+      "G40.5": "Status epilepticus, tonic-clonic"
+    },
+    "indication_icd10_ranges": [
+      "F00-F99",
+      "G00-G99",
+      "M00-M99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:18:18.957817"
+  },
+  "budesonide": {
+    "code": "A07EA06",
+    "drug_name": "budesonide",
+    "who_name": "budesonide",
+    "drug_class": "ATC class A07EA",
+    "drug_classcode": "A07EA",
+    "therapeutic_category": "Therapeutic category A07",
+    "anatomical_group": "A",
+    "indication": "Crohn's disease/Ulcerative colitis/Microscopic colitis",
+    "icd10_codes": [
+      "K50.0",
+      "K50.1",
+      "K51.0",
+      "K52.82"
+    ],
+    "icd10_descriptions": {
+      "K50.0": "Crohn's disease of small intestine",
+      "K50.1": "Crohn's disease of large intestine",
+      "K51.0": "Ulcerative (chronic) enterocolitis",
+      "K52.82": "Microscopic colitis"
+    },
+    "indication_icd10_ranges": [
+      "K50-K52",
+      "K00-K95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:18:42.287156"
+  },
+  "enoxaparin": {
+    "code": "B01AB05",
+    "drug_name": "enoxaparin",
+    "who_name": "enoxaparin",
+    "drug_class": "ATC class B01AB",
+    "drug_classcode": "B01AB",
+    "therapeutic_category": "Antithrombotic agents",
+    "anatomical_group": "B",
+    "indication": "Prevention and treatment of Deep Vein Thrombosis (DVT)/Treatment of Pulmonary Embolism (PE)/Treatment of Acute Coronary Syndromes (Unstable Angina or Non-ST-segment elevation myocardial infarction - NSTEMI)",
+    "icd10_codes": [
+      "I82.40",
+      "I26.9",
+      "I20.0",
+      "I21.4"
+    ],
+    "icd10_descriptions": {
+      "I82.40": "Acute embolism and thrombosis of unspecified deep veins of lower extremity",
+      "I26.9": "Pulmonary embolism without acute cor pulmonale",
+      "I20.0": "Unstable angina pectoris",
+      "I21.4": "Non-ST elevation (NSTEMI) myocardial infarction"
+    },
+    "indication_icd10_ranges": [
+      "I80-I89",
+      "I26",
+      "I20-I25"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:19:04.721236"
+  },
+  "astemizole": {
+    "code": "R06AX11",
+    "drug_name": "astemizole",
+    "who_name": "astemizole",
+    "drug_class": "ATC class R06AX",
+    "drug_classcode": "R06AX",
+    "therapeutic_category": "Antihistamines for systemic use",
+    "anatomical_group": "R",
+    "indication": "Allergic rhinitis/Urticaria/Allergic conjunctivitis/Pruritus",
+    "icd10_codes": [
+      "J30.4",
+      "L50.9",
+      "J30.1",
+      "L50.0"
+    ],
+    "icd10_descriptions": {
+      "J30.4": "Allergic rhinitis, unspecified",
+      "L50.9": "Urticaria, unspecified",
+      "J30.1": "Allergic rhinitis due to pollen",
+      "L50.0": "Allergic urticaria"
+    },
+    "indication_icd10_ranges": [
+      "J30-J39",
+      "L50-L54",
+      "L00-L99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:19:25.951808"
+  },
+  "acetaminophen codeine": {
+    "code": "N02AJ06",
+    "class": "Opioids in combination with non-opioid analgesics",
+    "therapeutic_category": "Analgesics",
+    "indication": "Management of moderate to moderately severe pain",
+    "icd10_codes": [
+      "R52.9",
+      "G89.1"
+    ],
+    "icd10_descriptions": {
+      "R52.9": "Unspecified pain",
+      "G89.1": "Acute pain, not elsewhere classified"
+    },
+    "drug_name": "acetaminophen codeine",
+    "classcode": "N02AJ",
+    "anatomical_group": "N",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:20:38.034327"
+  },
+  "tramadol": {
+    "code": "N02AX02",
+    "drug_name": "tramadol",
+    "who_name": "tramadol",
+    "drug_class": "ATC class N02AX",
+    "drug_classcode": "N02AX",
+    "therapeutic_category": "Analgesics",
+    "anatomical_group": "N",
+    "indication": "Moderate to moderately severe pain/Acute pain/Chronic pain/Postoperative pain",
+    "icd10_codes": [
+      "R52.9",
+      "G89.1",
+      "G89.2",
+      "G89.4"
+    ],
+    "icd10_descriptions": {
+      "R52.9": "Pain, unspecified",
+      "G89.1": "Acute pain, not elsewhere classified",
+      "G89.2": "Chronic pain, not elsewhere classified",
+      "G89.4": "Chronic pain syndrome"
+    },
+    "indication_icd10_ranges": [
+      "R50-R69",
+      "G80-G99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:20:49.103766"
+  },
+  "diphenhydramine": {
+    "code": "D04AA32",
+    "drug_name": "diphenhydramine",
+    "who_name": "diphenhydramine",
+    "drug_class": "ATC class D04AA",
+    "drug_classcode": "D04AA",
+    "therapeutic_category": "Therapeutic category D04",
+    "anatomical_group": "D",
+    "indication": "Allergic rhinitis/Urticaria/Insomnia/Pruritus",
+    "icd10_codes": [
+      "J30.4",
+      "L50.9",
+      "G47.00",
+      "L29.9"
+    ],
+    "icd10_descriptions": {
+      "J30.4": "Allergic rhinitis, unspecified",
+      "L50.9": "Urticaria, unspecified",
+      "G47.00": "Insomnia, unspecified",
+      "L29.9": "Pruritus, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "L00-L99",
+      "G00-G99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:21:10.396470"
+  },
+  "metformin": {
+    "code": "A10BA02",
+    "drug_name": "metformin",
+    "who_name": "metformin",
+    "drug_class": "Biguanides",
+    "drug_classcode": "A10BA",
+    "therapeutic_category": "Drugs used in diabetes",
+    "anatomical_group": "A",
+    "indication": "Type 2 diabetes mellitus/Prediabetes/Polycystic ovary syndrome",
+    "icd10_codes": [
+      "E11.9",
+      "R73.03",
+      "E28.2"
+    ],
+    "icd10_descriptions": {
+      "E11.9": "Type 2 diabetes mellitus without complications",
+      "R73.03": "Prediabetes",
+      "E28.2": "Polycystic ovarian syndrome"
+    },
+    "indication_icd10_ranges": [
+      "E10-E14",
+      "R70-R79",
+      "E20-E35"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:21:33.356340"
+  },
+  "nicotine": {
+    "code": "N07BA01",
+    "drug_name": "nicotine",
+    "who_name": "nicotine",
+    "drug_class": "ATC class N07BA",
+    "drug_classcode": "N07BA",
+    "therapeutic_category": "Therapeutic category N07",
+    "anatomical_group": "N",
+    "indication": "Nicotine dependence/Smoking cessation",
+    "icd10_codes": [
+      "F17.20",
+      "Z72.0"
+    ],
+    "icd10_descriptions": {
+      "F17.20": "Nicotine dependence, unspecified",
+      "Z72.0": "Tobacco use (current)"
+    },
+    "indication_icd10_ranges": [
+      "F10-F19",
+      "Z70-Z76"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:21:53.261249"
+  },
+  "sertraline": {
+    "code": "N06AB06",
+    "drug_name": "sertraline",
+    "who_name": "sertraline",
+    "drug_class": "Selective serotonin reuptake inhibitors",
+    "drug_classcode": "N06AB",
+    "therapeutic_category": "Psychoanaleptics",
+    "anatomical_group": "N",
+    "indication": "Major depressive disorder/Obsessive-compulsive disorder/Panic disorder/Post-traumatic stress disorder",
+    "icd10_codes": [
+      "F32.9",
+      "F42.9",
+      "F41.0",
+      "F43.1"
+    ],
+    "icd10_descriptions": {
+      "F32.9": "Major depressive disorder, single episode, unspecified",
+      "F42.9": "Obsessive-compulsive disorder, unspecified",
+      "F41.0": "Panic disorder [episodic paroxysmal anxiety]",
+      "F43.1": "Post-traumatic stress disorder"
+    },
+    "indication_icd10_ranges": [
+      "F30-F39",
+      "F40-F48"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:22:12.311306"
+  },
+  "warfarin": {
+    "code": "B01AA03",
+    "drug_name": "warfarin",
+    "who_name": "warfarin",
+    "drug_class": "ATC class B01AA",
+    "drug_classcode": "B01AA",
+    "therapeutic_category": "Antithrombotic agents",
+    "anatomical_group": "B",
+    "indication": "Prevention and treatment of venous thromboembolism (VTE)/Prevention of stroke and systemic embolism in atrial fibrillation/Prevention of systemic embolism associated with prosthetic heart valves",
+    "icd10_codes": [
+      "I26.9",
+      "I80.20",
+      "I48.91",
+      "Z95.2"
+    ],
+    "icd10_descriptions": {
+      "I26.9": "Pulmonary embolism, unspecified",
+      "I80.20": "Deep vein thrombosis of unspecified lower extremity",
+      "I48.91": "Unspecified atrial fibrillation",
+      "Z95.2": "Presence of prosthetic heart valve"
+    },
+    "indication_icd10_ranges": [
+      "I00-I99",
+      "Z00-Z99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:22:33.066243"
+  },
+  "verapamil": {
+    "code": "C08DA01",
+    "drug_name": "verapamil",
+    "who_name": "verapamil",
+    "drug_class": "ATC class C08DA",
+    "drug_classcode": "C08DA",
+    "therapeutic_category": "Calcium channel blockers",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Angina pectoris/Supraventricular arrhythmias",
+    "icd10_codes": [
+      "I10",
+      "I20.9",
+      "I47.1",
+      "I48.9"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "I20.9": "Angina pectoris, unspecified",
+      "I47.1": "Supraventricular tachycardia",
+      "I48.9": "Atrial fibrillation and flutter, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "I20-I25",
+      "I47-I49"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:22:56.436740"
+  },
+  "digoxin": {
+    "code": "C01AA05",
+    "drug_name": "digoxin",
+    "who_name": "digoxin",
+    "drug_class": "ATC class C01AA",
+    "drug_classcode": "C01AA",
+    "therapeutic_category": "Therapeutic category C01",
+    "anatomical_group": "C",
+    "indication": "Chronic heart failure/Atrial fibrillation",
+    "icd10_codes": [
+      "I50.9",
+      "I48.91",
+      "I50.0",
+      "I48.2"
+    ],
+    "icd10_descriptions": {
+      "I50.9": "Heart failure, unspecified",
+      "I48.91": "Unspecified atrial fibrillation",
+      "I50.0": "Congestive heart failure",
+      "I48.2": "Chronic atrial fibrillation"
+    },
+    "indication_icd10_ranges": [
+      "I50-I50",
+      "I47-I49",
+      "I00-I99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:23:14.512589"
+  },
+  "meperidine": {
+    "code": "N02AB02",
+    "drug_name": "pethidine",
+    "who_name": "pethidine",
+    "drug_class": "ATC class N02AB",
+    "drug_classcode": "N02AB",
+    "therapeutic_category": "Analgesics",
+    "anatomical_group": "N",
+    "indication": "Relief of moderate to severe pain/Analgesia during labor/Preoperative analgesia",
+    "icd10_codes": [
+      "R52.0",
+      "G89.12",
+      "O80",
+      "R52.2"
+    ],
+    "icd10_descriptions": {
+      "R52.0": "Acute pain",
+      "G89.12": "Acute postoperative pain",
+      "O80": "Encounter for full-term uncomplicated delivery",
+      "R52.2": "Other chronic pain"
+    },
+    "indication_icd10_ranges": [
+      "R00-R99",
+      "O00-O9A"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:23:51.708286",
+    "original_name": "meperidine"
+  },
+  "liletta": {
+    "code": "G03AC03",
+    "drug_name": "Levonorgestrel",
+    "who_name": "levonorgestrel",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Emergency Contraception/Hormonal Contraception/Menorrhagia/Endometriosis",
+    "icd10_codes": [
+      "Z30.011",
+      "Z30.430",
+      "N92.0",
+      "N80.9"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for emergency contraceptive counseling and management",
+      "Z30.430": "Encounter for insertion of levonorgestrel-releasing intrauterine contraceptive device",
+      "N92.0": "Excessive and frequent menstruation with regular cycle",
+      "N80.9": "Endometriosis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "Z30-Z39",
+      "N80-N98"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:24:37.842285",
+    "original_name": "liletta"
+  },
+  "aspirin": {
+    "code": "A01AD05",
+    "drug_name": "Acetylsalicylic acid",
+    "who_name": "acetylsalicylic acid",
+    "drug_class": "ATC class A01AD",
+    "drug_classcode": "A01AD",
+    "therapeutic_category": "Therapeutic category A01",
+    "anatomical_group": "A",
+    "indication": "Prevention of myocardial infarction/Prevention of ischemic stroke/Management of angina pectoris/Pain and fever relief",
+    "icd10_codes": [
+      "I21.9",
+      "I63.9",
+      "I20.9",
+      "R52.9"
+    ],
+    "icd10_descriptions": {
+      "I21.9": "Acute myocardial infarction, unspecified",
+      "I63.9": "Cerebral infarction, unspecified",
+      "I20.9": "Angina pectoris, unspecified",
+      "R52.9": "Pain, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "I20-I25",
+      "I60-I69",
+      "R50-R69"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:25:21.970044",
+    "original_name": "aspirin"
+  },
+  "nitrofurantoin": {
+    "code": "J01XE01",
+    "drug_name": "nitrofurantoin",
+    "who_name": "nitrofurantoin",
+    "drug_class": "ATC class J01XE",
+    "drug_classcode": "J01XE",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Urinary Tract Infections",
+    "icd10_codes": [
+      "N39.0",
+      "N30.0",
+      "N30.9"
+    ],
+    "icd10_descriptions": {
+      "N39.0": "Urinary tract infection, site not specified",
+      "N30.0": "Acute cystitis",
+      "N30.9": "Cystitis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "N30-N39"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:25:46.472402"
+  },
+  "phenazopyridine": {
+    "code": "G04BX06",
+    "drug_name": "phenazopyridine",
+    "who_name": "phenazopyridine",
+    "drug_class": "ATC class G04BX",
+    "drug_classcode": "G04BX",
+    "therapeutic_category": "Therapeutic category G04",
+    "anatomical_group": "G",
+    "indication": "Symptomatic relief of dysuria and other urinary tract discomfort (pain, burning, urgency, frequency)",
+    "icd10_codes": [
+      "R30.0",
+      "N39.0",
+      "N30.9"
+    ],
+    "icd10_descriptions": {
+      "R30.0": "Dysuria",
+      "N39.0": "Urinary tract infection, site not specified",
+      "N30.9": "Cystitis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "R30-R39",
+      "N30-N39"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:26:02.396033"
+  },
+  "trinessa day pack": {
+    "code": "G03AA12",
+    "class": "Progestogens and estrogens, fixed combinations",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Contraception (prevention of pregnancy)",
+    "icd10_codes": [
+      "Z30.011",
+      "Z30.012"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for initial prescription of oral contraceptives",
+      "Z30.012": "Encounter for routine prescription of oral contraceptives"
+    },
+    "drug_name": "trinessa day pack",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:27:08.279290"
+  },
+  "alendronic acid": {
+    "code": "M05BA04",
+    "drug_name": "alendronic acid",
+    "who_name": "alendronic acid",
+    "drug_class": "ATC class M05BA",
+    "drug_classcode": "M05BA",
+    "therapeutic_category": "Therapeutic category M05",
+    "anatomical_group": "M",
+    "indication": "Postmenopausal osteoporosis/Glucocorticoid-induced osteoporosis/Osteoporosis in men/Paget's disease of bone",
+    "icd10_codes": [
+      "M81.0",
+      "M81.6",
+      "M81.8",
+      "M88.9"
+    ],
+    "icd10_descriptions": {
+      "M81.0": "Postmenopausal osteoporosis",
+      "M81.6": "Drug-induced osteoporosis",
+      "M81.8": "Other specified osteoporosis",
+      "M88.9": "Paget's disease of bone, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "M80-M85",
+      "M88",
+      "M00-M99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:27:19.442937"
+  },
+  "galantamine": {
+    "code": "N06DA04",
+    "drug_name": "galantamine",
+    "who_name": "galantamine",
+    "drug_class": "ATC class N06DA",
+    "drug_classcode": "N06DA",
+    "therapeutic_category": "Psychoanaleptics",
+    "anatomical_group": "N",
+    "indication": "Dementia of Alzheimer type/Alzheimer's disease",
+    "icd10_codes": [
+      "F00.9",
+      "G30.9",
+      "F00.1",
+      "F00.0"
+    ],
+    "icd10_descriptions": {
+      "F00.9": "Alzheimer's disease, unspecified",
+      "G30.9": "Alzheimer's disease, unspecified",
+      "F00.1": "Alzheimer's disease with late onset",
+      "F00.0": "Alzheimer's disease with early onset"
+    },
+    "indication_icd10_ranges": [
+      "F00-F09",
+      "G30-G32"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:27:44.090083"
+  },
+  "paclitaxel": {
+    "code": "L01CD01",
+    "drug_name": "paclitaxel",
+    "who_name": "paclitaxel",
+    "drug_class": "ATC class L01CD",
+    "drug_classcode": "L01CD",
+    "therapeutic_category": "Therapeutic category L01",
+    "anatomical_group": "L",
+    "indication": "Ovarian cancer/Breast cancer/Non-small cell lung cancer/Kaposi's sarcoma",
+    "icd10_codes": [
+      "C56.9",
+      "C50.9",
+      "C34.9",
+      "C46.9"
+    ],
+    "icd10_descriptions": {
+      "C56.9": "Malignant neoplasm of unspecified ovary",
+      "C50.9": "Malignant neoplasm of breast, unspecified",
+      "C34.9": "Malignant neoplasm of bronchus or lung, unspecified",
+      "C46.9": "Kaposi's sarcoma, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "C00-C96"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:28:06.445118"
+  },
+  "denosumab": {
+    "code": "M05BX04",
+    "drug_name": "denosumab",
+    "who_name": "denosumab",
+    "drug_class": "ATC class M05BX",
+    "drug_classcode": "M05BX",
+    "therapeutic_category": "Therapeutic category M05",
+    "anatomical_group": "M",
+    "indication": "Postmenopausal osteoporosis/Prevention of skeletal-related events in patients with bone metastases from solid tumors/Giant cell tumor of bone",
+    "icd10_codes": [
+      "M81.0",
+      "C79.51",
+      "D48.0"
+    ],
+    "icd10_descriptions": {
+      "M81.0": "Postmenopausal osteoporosis",
+      "C79.51": "Secondary malignant neoplasm of bone",
+      "D48.0": "Neoplasm of uncertain behavior of bone and articular cartilage"
+    },
+    "indication_icd10_ranges": [
+      "M80-M94",
+      "C00-D49"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:28:25.068407"
+  },
+  "amiodarone": {
+    "code": "C01BD01",
+    "drug_name": "amiodarone",
+    "who_name": "amiodarone",
+    "drug_class": "ATC class C01BD",
+    "drug_classcode": "C01BD",
+    "therapeutic_category": "Therapeutic category C01",
+    "anatomical_group": "C",
+    "indication": "Ventricular tachycardia/Ventricular fibrillation/Atrial fibrillation/Atrial flutter",
+    "icd10_codes": [
+      "I47.2",
+      "I49.01",
+      "I48.91",
+      "I48.3"
+    ],
+    "icd10_descriptions": {
+      "I47.2": "Ventricular tachycardia",
+      "I49.01": "Ventricular fibrillation",
+      "I48.91": "Unspecified atrial fibrillation",
+      "I48.3": "Typical atrial flutter"
+    },
+    "indication_icd10_ranges": [
+      "I47-I49",
+      "I00-I99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:28:44.985512"
+  },
+  "atropine": {
+    "code": "A03BA01",
+    "drug_name": "atropine",
+    "who_name": "atropine",
+    "drug_class": "ATC class A03BA",
+    "drug_classcode": "A03BA",
+    "therapeutic_category": "Therapeutic category A03",
+    "anatomical_group": "A",
+    "indication": "Symptomatic Bradycardia/Organophosphate Poisoning/Irritable Bowel Syndrome",
+    "icd10_codes": [
+      "R00.1",
+      "T60.0",
+      "K58.9"
+    ],
+    "icd10_descriptions": {
+      "R00.1": "Bradycardia, unspecified",
+      "T60.0": "Poisoning by organophosphate and carbamate insecticides",
+      "K58.9": "Irritable bowel syndrome, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "R00-R09",
+      "T51-T65",
+      "K00-K95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:29:04.325094"
+  },
+  "etonogestrel": {
+    "code": "G03AC08",
+    "drug_name": "etonogestrel",
+    "who_name": "etonogestrel",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Contraception/Prevention of pregnancy/Management of heavy menstrual bleeding/Management of dysmenorrhea",
+    "icd10_codes": [
+      "Z30.012",
+      "Z30.015",
+      "N92.0",
+      "N94.4"
+    ],
+    "icd10_descriptions": {
+      "Z30.012": "Encounter for initial prescription of implantable subdermal contraceptive",
+      "Z30.015": "Encounter for initial prescription of vaginal ring contraceptive",
+      "N92.0": "Excessive and frequent menstruation with regular cycle",
+      "N94.4": "Primary dysmenorrhea"
+    },
+    "indication_icd10_ranges": [
+      "Z30-Z39",
+      "N92-N95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:29:27.007183"
+  },
+  "nitrofurantoin macrocrystals": {
+    "code": "J01XE01",
+    "drug_name": "nitrofurantoin",
+    "who_name": "nitrofurantoin",
+    "drug_class": "ATC class J01XE",
+    "drug_classcode": "J01XE",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Urinary tract infections/Acute cystitis",
+    "icd10_codes": [
+      "N39.0",
+      "N30.00",
+      "N30.90",
+      "N30.01"
+    ],
+    "icd10_descriptions": {
+      "N39.0": "Urinary tract infection, site unspecified",
+      "N30.00": "Acute cystitis, unspecified",
+      "N30.90": "Cystitis, unspecified",
+      "N30.01": "Acute cystitis with hematuria"
+    },
+    "indication_icd10_ranges": [
+      "N00-N99",
+      "N30-N39"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:30:10.233736",
+    "original_name": "nitrofurantoin macrocrystals"
+  },
+  "terfenadine": {
+    "code": "R06AX12",
+    "drug_name": "terfenadine",
+    "who_name": "terfenadine",
+    "drug_class": "ATC class R06AX",
+    "drug_classcode": "R06AX",
+    "therapeutic_category": "Antihistamines for systemic use",
+    "anatomical_group": "R",
+    "indication": "Allergic rhinitis/Urticaria/Allergic reactions",
+    "icd10_codes": [
+      "J30.4",
+      "L50.9",
+      "J30.1"
+    ],
+    "icd10_descriptions": {
+      "J30.4": "Allergic rhinitis, unspecified",
+      "L50.9": "Urticaria, unspecified",
+      "J30.1": "Allergic rhinitis due to pollen"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "L00-L99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:30:28.075354"
+  },
+  "losartan": {
+    "code": "C09CA01",
+    "drug_name": "losartan",
+    "who_name": "losartan",
+    "drug_class": "ATC class C09CA",
+    "drug_classcode": "C09CA",
+    "therapeutic_category": "Agents acting on the renin-angiotensin system",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Diabetic nephropathy/Heart failure",
+    "icd10_codes": [
+      "I10",
+      "E11.22",
+      "I50.9"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "E11.22": "Type 2 diabetes mellitus with diabetic nephropathy",
+      "I50.9": "Heart failure, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "E00-E89",
+      "I30-I52"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:30:46.786138"
+  },
+  "fentanyl": {
+    "code": "N01AH01",
+    "drug_name": "fentanyl",
+    "who_name": "fentanyl",
+    "drug_class": "ATC class N01AH",
+    "drug_classcode": "N01AH",
+    "therapeutic_category": "Therapeutic category N01",
+    "anatomical_group": "N",
+    "indication": "Management of severe acute pain/Management of severe chronic pain/Analgesia during surgical and other painful procedures",
+    "icd10_codes": [
+      "G89.18",
+      "G89.29",
+      "G89.3"
+    ],
+    "icd10_descriptions": {
+      "G89.18": "Other acute postprocedural pain",
+      "G89.29": "Other chronic pain",
+      "G89.3": "Neoplasm related pain (acute) (chronic)"
+    },
+    "indication_icd10_ranges": [
+      "G89-G99",
+      "R50-R69"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:31:08.409072"
+  },
+  "cetirizine": {
+    "code": "R06AE07",
+    "drug_name": "cetirizine",
+    "who_name": "cetirizine",
+    "drug_class": "ATC class R06AE",
+    "drug_classcode": "R06AE",
+    "therapeutic_category": "Antihistamines for systemic use",
+    "anatomical_group": "R",
+    "indication": "Allergic rhinitis/Chronic urticaria/Allergic conjunctivitis",
+    "icd10_codes": [
+      "J30.1",
+      "J30.3",
+      "L50.1",
+      "H10.1"
+    ],
+    "icd10_descriptions": {
+      "J30.1": "Allergic rhinitis due to pollen",
+      "J30.3": "Other allergic rhinitis",
+      "L50.1": "Idiopathic urticaria",
+      "H10.1": "Acute atopic conjunctivitis"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "L00-L99",
+      "H00-H59"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:31:35.217918"
+  },
+  "chlorpheniramine": {
+    "code": "R06AB04",
+    "drug_name": "chlorphenamine",
+    "who_name": "chlorphenamine",
+    "drug_class": "ATC class R06AB",
+    "drug_classcode": "R06AB",
+    "therapeutic_category": "Antihistamines for systemic use",
+    "anatomical_group": "R",
+    "indication": "Allergic rhinitis/Urticaria/Allergic conjunctivitis/Pruritus",
+    "icd10_codes": [
+      "J30.1",
+      "J30.3",
+      "L50.0",
+      "H10.1"
+    ],
+    "icd10_descriptions": {
+      "J30.1": "Allergic rhinitis due to pollen",
+      "J30.3": "Other allergic rhinitis",
+      "L50.0": "Allergic urticaria",
+      "H10.1": "Acute atopic conjunctivitis"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "L00-L99",
+      "H00-H59"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:32:12.691301",
+    "original_name": "chlorpheniramine"
+  },
+  "methadone": {
+    "code": "N07BC02",
+    "drug_name": "methadone",
+    "who_name": "methadone",
+    "drug_class": "ATC class N07BC",
+    "drug_classcode": "N07BC",
+    "therapeutic_category": "Therapeutic category N07",
+    "anatomical_group": "N",
+    "indication": "Opioid dependence treatment/Severe chronic pain management",
+    "icd10_codes": [
+      "F11.20",
+      "G89.29",
+      "R52.1"
+    ],
+    "icd10_descriptions": {
+      "F11.20": "Opioid dependence, unspecified",
+      "G89.29": "Other chronic pain",
+      "R52.1": "Chronic intractable pain"
+    },
+    "indication_icd10_ranges": [
+      "F10-F19",
+      "G89-G99",
+      "R50-R52"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:32:30.957755"
+  },
+  "leucovorin": {
+    "code": "V03AF03",
+    "drug_name": "Calcium folinate",
+    "who_name": "calcium folinate",
+    "drug_class": "ATC class V03AF",
+    "drug_classcode": "V03AF",
+    "therapeutic_category": "Therapeutic category V03",
+    "anatomical_group": "V",
+    "indication": "Prevention and treatment of methotrexate toxicity/Adjuvant treatment for colorectal cancer/Treatment of drug-induced folate deficiency anemia",
+    "icd10_codes": [
+      "T45.1X5A",
+      "C18.9",
+      "C20",
+      "D52.1"
+    ],
+    "icd10_descriptions": {
+      "T45.1X5A": "Adverse effect of antineoplastic and immunosuppressive drugs, initial encounter",
+      "C18.9": "Malignant neoplasm of colon, unspecified",
+      "C20": "Malignant neoplasm of rectum",
+      "D52.1": "Drug-induced folate deficiency anemia"
+    },
+    "indication_icd10_ranges": [
+      "T36-T50",
+      "C00-D49",
+      "D50-D89"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:33:21.643181",
+    "original_name": "leucovorin"
+  },
+  "oxaliplatin": {
+    "code": "L01XA03",
+    "drug_name": "oxaliplatin",
+    "who_name": "oxaliplatin",
+    "drug_class": "ATC class L01XA",
+    "drug_classcode": "L01XA",
+    "therapeutic_category": "Therapeutic category L01",
+    "anatomical_group": "L",
+    "indication": "Colorectal cancer",
+    "icd10_codes": [
+      "C18.9",
+      "C19",
+      "C20"
+    ],
+    "icd10_descriptions": {
+      "C18.9": "Malignant neoplasm of colon, unspecified",
+      "C19": "Malignant neoplasm of rectosigmoid junction",
+      "C20": "Malignant neoplasm of rectum"
+    },
+    "indication_icd10_ranges": [
+      "C00-C96",
+      "C15-C26"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:33:49.512760"
+  },
+  "azithromycin": {
+    "code": "J01FA10",
+    "drug_name": "azithromycin",
+    "who_name": "azithromycin",
+    "drug_class": "ATC class J01FA",
+    "drug_classcode": "J01FA",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Respiratory tract infections/Chlamydia infections/Acute otitis media",
+    "icd10_codes": [
+      "J18.9",
+      "J02.9",
+      "A74.9",
+      "H66.90"
+    ],
+    "icd10_descriptions": {
+      "J18.9": "Pneumonia, unspecified organism",
+      "J02.9": "Acute pharyngitis, unspecified",
+      "A74.9": "Chlamydial infection, unspecified",
+      "H66.90": "Otitis media, unspecified, unspecified ear"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "A00-B99",
+      "H60-H95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:34:07.642901"
+  },
+  "norinyl +day pack": {
+    "code": "G03AA05",
+    "class": "Progestogens and estrogens, fixed combinations",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Contraception",
+    "icd10_codes": [
+      "Z30.011",
+      "Z30.012"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for initial prescription of oral contraceptive",
+      "Z30.012": "Encounter for routine prescription of oral contraceptive"
+    },
+    "drug_name": "norinyl +day pack",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:35:14.824405"
+  },
+  "mestranol norethynodrel": {
+    "code": "G03AA01",
+    "class": "Progestogens and estrogens, fixed combinations",
+    "therapeutic_category": "Hormonal contraceptives for systemic use",
+    "indication": "Contraception (prevention of pregnancy)",
+    "icd10_codes": [
+      "Z30.011",
+      "Z30.012",
+      "N92.6"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for initial prescription of oral contraceptive pills",
+      "Z30.012": "Encounter for routine contraceptive management with oral contraceptive pills",
+      "N92.6": "Irregular menstruation, unspecified"
+    },
+    "drug_name": "mestranol norethynodrel",
+    "classcode": "G03AA",
+    "anatomical_group": "G",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:36:10.016061"
+  },
+  "kyleena": {
+    "code": "G03AC03",
+    "drug_name": "levonorgestrel",
+    "who_name": "levonorgestrel",
+    "drug_class": "ATC class G03AC",
+    "drug_classcode": "G03AC",
+    "therapeutic_category": "Sex hormones and modulators of the genital system",
+    "anatomical_group": "G",
+    "indication": "Contraception/Heavy menstrual bleeding/Prevention of endometrial hyperplasia during estrogen replacement therapy",
+    "icd10_codes": [
+      "Z30.011",
+      "Z30.018",
+      "N92.0",
+      "Z79.890"
+    ],
+    "icd10_descriptions": {
+      "Z30.011": "Encounter for emergency contraceptive counseling and prescription",
+      "Z30.018": "Encounter for other contraceptive management",
+      "N92.0": "Excessive and frequent menstruation with regular cycle",
+      "Z79.890": "Long-term (current) use of other hormones (systemic), including HRT"
+    },
+    "indication_icd10_ranges": [
+      "Z30-Z3A",
+      "N90-N98",
+      "Z77-Z99"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:36:38.004044",
+    "original_name": "kyleena"
+  },
+  "furosemide": {
+    "code": "C03CA01",
+    "drug_name": "furosemide",
+    "who_name": "furosemide",
+    "drug_class": "Sulfonamides",
+    "drug_classcode": "C03CA",
+    "therapeutic_category": "Diuretics",
+    "anatomical_group": "C",
+    "indication": "Edema (associated with congestive heart failure, hepatic cirrhosis, and renal disease)/Hypertension",
+    "icd10_codes": [
+      "I50.0",
+      "N18.9",
+      "K74.6",
+      "I10"
+    ],
+    "icd10_descriptions": {
+      "I50.0": "Congestive heart failure",
+      "N18.9": "Chronic kidney disease, unspecified",
+      "K74.6": "Other and unspecified cirrhosis of liver",
+      "I10": "Essential (primary) hypertension"
+    },
+    "indication_icd10_ranges": [
+      "I00-I99",
+      "N00-N99",
+      "K00-K95"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:37:03.826987"
+  },
+  "hydrocodone": {
+    "code": "R05DA03",
+    "drug_name": "hydrocodone",
+    "who_name": "hydrocodone",
+    "drug_class": "ATC class R05DA",
+    "drug_classcode": "R05DA",
+    "therapeutic_category": "Therapeutic category R05",
+    "anatomical_group": "R",
+    "indication": "Management of moderate to severe pain/Symptomatic relief of severe, intractable cough",
+    "icd10_codes": [
+      "G89.1",
+      "G89.2",
+      "R05"
+    ],
+    "icd10_descriptions": {
+      "G89.1": "Acute pain, not elsewhere classified",
+      "G89.2": "Chronic pain, not elsewhere classified",
+      "R05": "Cough"
+    },
+    "indication_icd10_ranges": [
+      "G89-G99",
+      "R00-R09"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T18:37:23.597274"
+  },
+  "buprenorphine naloxone": {
+    "code": "N07BC51",
+    "class": "Drugs used in opioid dependence",
+    "therapeutic_category": "Other nervous system drugs",
+    "indication": "Treatment of opioid dependence",
+    "icd10_codes": [
+      "F11.20",
+      "F11.21"
+    ],
+    "icd10_descriptions": {
+      "F11.20": "Opioid dependence, uncomplicated",
+      "F11.21": "Opioid dependence, in remission"
+    },
+    "drug_name": "buprenorphine naloxone",
+    "classcode": "N07BC",
+    "anatomical_group": "N",
+    "source": "LLM_FALLBACK",
+    "icd10_mapping_source": "llm_fallback",
+    "needs_verification": true,
+    "confidence": "low",
+    "fetched_date": "2025-11-24T18:38:36.748737"
+  }
+}

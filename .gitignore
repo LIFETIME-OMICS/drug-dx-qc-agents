@@ -205,3 +205,32 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Data organization:
+# - data/     = source input files (committed to git)
+# - output/   = final results (atc_database.json committed, others optional)
+# - tmp/      = intermediate pipeline files (ignored, auto-cleaned)
+# - cache/    = runtime caches (ignored)
+# - logs/     = error/debug logs (ignored)
+
+# Output folder (keep final database)
+output/
+!output/atc_database.json
+
+# Temporary/intermediate files (auto-cleaned by pipeline)
+tmp/
+temp/
+
+# Cache folder (runtime caches)
+cache/
+
+# Data folder - only ignore generated files, keep source files
+data/*.json
+data/*.pkl
+data/*.parquet
+data/*.txt
+# Keep source CSV files in data/
+!data/medications_synthetic.csv
+!data/conditions_synthetic.csv
+
+planning/

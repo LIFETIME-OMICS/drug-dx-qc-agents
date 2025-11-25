@@ -1,0 +1,4 @@
+start,stop,patient,encounter,code,description,encounter.start,encounter.stop,encounterclass,encounter.code,encounter.description,encounter.reasoncode,encounter.reasondescription
+2015-01-11,,3e77485a-596e-8b53-a9f0-78a5d3b1c861,46f5d44b-e0fe-4e94-8bc3-6415e0dc363d,I10,Essential (primary) hypertension,2015-01-11T10:15:00Z,2015-01-11T10:45:00Z,ambulatory,185347001,Encounter for problem,I10,Essential (primary) hypertension
+2015-03-01,,cb84eb7e-cff4-f9d8-ee44-12f43933c9f2,f220ecb2-e86a-443c-8449-a8ab05c3e3e0,I10,Essential (primary) hypertension,2015-03-01T14:20:00Z,2015-03-01T14:50:00Z,ambulatory,185347001,Encounter for problem,I10,Essential (primary) hypertension
+2016-05-15,,8adc763f-3357-cc4f-f84c-f24e7e0df6ec,c2c59e4a-3964-45a7-b0c6-51b64c4e3bb9,E11.9,Type 2 diabetes mellitus without complications,2016-05-15T09:30:00Z,2016-05-15T10:00:00Z,ambulatory,185347001,Encounter for problem,E11.9,Type 2 diabetes mellitus without complications

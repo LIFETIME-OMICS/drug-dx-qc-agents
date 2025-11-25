@@ -1,0 +1,4 @@
+drug_name,atc_code,atc_class,indication,icd10_codes,icd10_mapping_source,source,needs_verification,comment
+amlodipine,C08CA01,"Calcium channel blockers, dihydropyridine derivatives",Hypertension/Angina pectoris,"[""I10"", ""I20.9"", ""I20.8""]",llm_enriched,WHO ATC/DDD Index,False,
+lisinopril,C09AA03,"ACE inhibitors, plain",Hypertension/Heart Failure/Post-Myocardial Infarction,"[""I10"", ""I50.9"", ""I25.2""]",llm_enriched,WHO ATC/DDD Index,False,
+penicillin v,J01CE02,ATC class J01CE,Streptococcal pharyngitis/Acute otitis media/Erysipelas/Cellulitis,"[""J02.0"", ""H66.9"", ""A46"", ""L03.90""]",llm_enriched,WHO ATC/DDD Index,False,✅ WHO (via synonym: phenoxymethylpenicillin)

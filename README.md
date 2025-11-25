@@ -8,9 +8,12 @@ Multi-Agent Drug & Diagnosis Quality Control Pipeline (Google ADK)
 ---
 
 ## 📖 Overview
-This project implements a **multi-agent pipeline** using the **Google Agent Development Kit (ADK)** to process deidentified electronic health records (EHRs), classify medications, summarize drug classes, and evaluate whether diagnoses align with prescribed drugs.  
+This project implements a **multi-agent pipeline** using the **Google Agent Development Kit (ADK)** to process already deidentified electronic health records (EHRs), classify medications, summarize drug classes, and evaluate whether diagnoses align with prescribed drugs.  
 
-The pipeline ensures **quality control** by identifying patients with medications that lack corresponding diagnoses in their records.  
+The pipeline ensures **quality control** by identifying patients with medications that lack corresponding diagnoses in their records. The pipeline can also be used to generate **digital twin patients** with prescribed drug classes and linked diagnoses without exposing medication details and any original data. 
+
+We use this 100 patient synthetic data for testing:
+https://www.kaggle.com/datasets/mexwell/synthetic-al-medical-records/data 
 
 ---
 
@@ -18,36 +21,68 @@ The pipeline ensures **quality control** by identifying patients with medication
 The system runs **4 modular agents** in sequence:
 
 1. **drug-identifier**  
-   Extracts drug names from `medication.csv` and normalizes spelling/dosage forms.  
+   Extracts drug names from `medication.csv` and normalizes spelling forms.  
 
 2. **drug-classifier**  
-   Maps drugs to ATC hierarchical classes (e.g., bronchodilators, antihypertensives) and to diagnosis (dx).  
+   Maps drugs to ATC hierarchical classes (e.g., bronchodilators, antihypertensives) and to ICD-10 diagnosis (dx).  
 
-3. **stats-summarizer**  
-   Summarizes drug usage by patient and class, providing context for diagnosis evaluation.  
+3. **qc-evaluator**  
+   Compares dx against `diagnosis.csv` and flags patients with prescriptions lacking corresponding diagnoses. 
 
-4. **qc-evaluator**  
-   Compares dx against `diagnosis.csv` and flags patients with prescriptions lacking corresponding diagnoses.  
+4. **stats-summarizer**  
+   Summarizes drug usage by patient and class, providing context for diagnosis evaluation.   
+
+**Run all 4 in sequence**  
+
+5. **Sequential-Runner Agent**   
+   agents\drug_dx_qc_agents.py
+
+**Optional: Orchestrator Agent that calls the other agents as needed**   
+Answers to prompts to provide summary stats. Summarizes drug usage by patient and class, providing context for diagnosis evaluation.  
+
+**Script to run first 2 agents in sequence to create the local ATC database**   
+scripts\build_atc_database.py
 
 ---
 
 ## 📁 Project Structure
 ```
-multi-agent-qc-pipeline/
+drug-dx-qc-agents/
 │── agents/
-│   ├── drug_identifier.py
-│   ├── drug_classifier.py
-│   ├── stats_summarizer.py
-│   ├── qc_evaluator.py
-│── data/
-│   ├── medication.csv   # synthetic sample
-│   ├── diagnosis.csv    # synthetic sample
+│   ├── drug_identifier.py       # Agent 1: Extract drug names
+│   ├── drug_classifier.py       # Agent 2: Classify to ATC + ICD-10
+│   ├── qc_evaluator.py          # Agent 3: Diagnosis QC
+│   ├── stats_summarizer.py      # Agent 4: Drug usage statistics
+│
+│── data/                         # Source input files (committed)
+│   ├── medications_synthetic.csv
+│   ├── conditions_synthetic.csv
+│
+│── output/                       # Generated results (optionally committed)
+│   └── atc_database.json        # ATC+ICD-10 cache (reused & augmented)
+│
+│── tmp/                          # Intermediate pipeline files (gitignored)
+│── cache/                        # Runtime caches (gitignored)
+│── logs/                         # Error/debug logs (gitignored)
+│
+│── scripts/
+│   ├── build_atc_database.py
+│
 │── tests/
-│   ├── test_agents.py
+│   ├── test_pipeline.py
+│   ├── conftest.py
+│
 │── main.py
 │── requirements.txt
 │── README.md
 ```
+
+### Key Directories:
+- **`data/`**: Source input files (CSV data)
+- **`output/`**: Final results including the reusable ATC database cache
+- **`tmp/`**: Intermediate CSV files generated during pipeline execution
+- **`cache/`**: Runtime caches for performance optimization
+- **`logs/`**: Error and debug logs
 
 ---
 
@@ -64,15 +99,128 @@ pip install -r requirements.txt
 
 ---
 
-## 🚀 Usage
+## 🔄 Workflow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  classify_single_drug()                      │
+│              Hybrid WHO + LLM Classification                 │
+└──────────────────┬──────────────────────────────────────────┘
+                   │
+                   ▼
+         ┌─────────────────────┐
+         │  1️⃣ Local Database   │
+         │  Check atc_database  │
+         │  (INSTANT)           │
+         └──────────┬───────────┘
+                    │
+                    ├─── Found? ────────────────┐
+                    │                            │
+                    ▼ Not Found                  ▼
+         ┌─────────────────────┐         ┌──────────────┐
+         │  2️⃣ WHO ATC Lookup   │         │   Return     │
+         │  fetch_atc_from_who  │         │   Cached     │
+         │  (10-second delay)   │         │   Result     │
+         └──────────┬───────────┘         └──────────────┘
+                    │
+                    ├─── Found? ─────> Auto-save & Return
+                    │
+                    ▼ Not Found
+         ┌─────────────────────┐
+         │  3️⃣ LLM Synonyms     │
+         │  suggest_synonyms()  │
+         │  (Gemini)            │
+         └──────────┬───────────┘
+                    │
+                    ├─── For each synonym:
+                    │    └─> Try WHO lookup again
+                    │
+                    ├─── Found with synonym? ──> Auto-save & Return
+                    │
+                    ▼ Still Not Found
+         ┌─────────────────────┐
+         │  4️⃣ LLM Fallback     │
+         │  classify_with_llm() │
+         │  (Flagged for review)│
+         └──────────┬───────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │  Auto-save to DB    │
+         │  needs_verification │
+         │  = True             │
+         └─────────────────────┘
+```
+---
+
+
+## 🗄️ ATC Database - Self-Maintaining Hybrid Architecture
+
+This project uses a **hybrid WHO + LLM approach** for drug classification:
+- ✅ **Authoritative** - Uses official WHO ATC/DDD Index as primary source
+- ✅ **Intelligent** - LLM handles synonyms (acetaminophen → paracetamol)
+- ✅ **Self-maintaining** - Auto-builds and updates local cache
+- ✅ **Fast** - Instant lookups after first run
+- ✅ **Ethical** - Respects WHO website robots.txt (10-second delay)
+
+### How It Works
+
+The `drug_classifier` agent automatically:
+
+1. **Checks local cache** first (`output/atc_database.json`) - instant lookup
+2. **Fetches from WHO** if not cached - authoritative ATC codes
+3. **Uses LLM for synonyms** if WHO lookup fails - intelligent resolution
+4. **LLM fallback** for truly unknown drugs - flagged for verification
+5. **Auto-saves results** - builds local database incrementally
+
+**No manual database build required!** Just run the agents.
+
+### First Run vs Subsequent Runs
+
+**First Run (no cache):**
+```bash
+# Takes ~20 minutes for 123 unique drugs
+# Each new drug: 10-second WHO lookup + auto-save to cache
+python scripts/run_drug_classifier.py
+```
+
+**Subsequent Runs (with cache):**
+```bash
+# Instant! All drugs already in local database
+# Only new drugs trigger WHO lookup
+python scripts/run_drug_classifier.py
+```
+
+### Data Sources (Priority Order)
+
+1. **Local Cache**: `output/atc_database.json` (instant, built automatically and reused)
+2. **WHO ATC/DDD Index**: https://atcddd.fhi.no/ (authoritative, 10-sec delay)
+3. **LLM Synonym Resolution**: Gemini suggests alternatives (acetaminophen → paracetamol)
+4. **LLM Fallback**: Gemini classification (flagged with `needs_verification=True`)
+
+### Optional: Pre-build Database
+
+Want to build the entire database upfront?
+
+```bash
+python scripts/build_atc_database.py --medications data/medications_synthetic.csv
+```
+
+This pre-populates the cache, but **the classifier agent builds it automatically** as needed
+
+---
+
+## �🚀 Usage
 Run the pipeline locally with synthetic data:
 
 ```bash
-python main.py --med data/medication.csv --diag data/diagnosis.csv
+python main.py --med data/medications_synthetic.csv --diag data/conditions_synthetic.csv
 ```
 
 Expected outputs:
-- Patient-level summaries
+- Normalized drug names
+- ATC classifications for all drugs
+- Aggregate statistics across all patients
 - QC flags (missing diagnosis, mismatched drug-diagnosis pairs)
 
 ---
@@ -110,7 +258,7 @@ This project is licensed under the Apache License 2.0. See `LICENSE` for details
 - Google Agent Development Kit (ADK)  
 - ATC Classification System  
 - FAIRlyz project ecosystem (future integration)  
-```
+
 
 ---
 
