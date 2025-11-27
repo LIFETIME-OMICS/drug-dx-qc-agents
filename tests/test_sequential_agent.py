@@ -109,31 +109,47 @@ class TestDrugDxQcSequentialAgent:
         assert len(response_text) > 0
         print(f"\n✅ Pipeline Response:\n{response_text}\n")
     
-    def test_full_pipeline_with_test_data(self, api_key_available):
+    def test_full_pipeline_with_test_data(self, api_key_available, test_input_files):
         """
-        Test the full 3-agent pipeline with actual test data files.
+        Test the full 3-agent pipeline with actual test data files from test_input_files fixture.
         
-        This test processes:
-        - tests/medications_test.csv (3 medication records)
-        - tests/conditions_test.csv (patient diagnoses)
+        Uses test1 data (3 medication records, 3 patients) from tests/test1/input1/
         
         Through all 3 agents sequentially:
         1. Drug Identifier - extracts drug names
         2. Drug Classifier - classifies to ATC codes
         3. QC Evaluator - validates medication-diagnosis alignment
-        """
         
-        test_prompt = """
+        Outputs are saved to: tests/tmp/
+        """
+        import shutil
+        
+        # Get input file paths from fixture
+        meds_file = str(test_input_files['medications'])
+        conditions_file = str(test_input_files['conditions'])
+        
+        # Clean output directory before test
+        output_dir = "tests/tmp"
+        if os.path.exists(output_dir):
+            shutil.rmtree(output_dir)
+        os.makedirs(output_dir, exist_ok=True)
+        
+        test_prompt = f"""
 Process the following medication and diagnosis data through the complete QC pipeline:
 
 Input Files:
-- Medications: tests/medications_test.csv
-- Conditions: tests/conditions_test.csv
+- Medications: {meds_file} (3 patients, 3 medications)
+- Conditions: {conditions_file} (patient diagnoses)
+
+Output Directory: {output_dir}/
 
 Tasks:
 1. Extract clean drug names from the medication descriptions
+   → Save to: {output_dir}/drug_names_extracted.csv
 2. Classify each drug to ATC codes with ICD-10 enrichment
+   → Save to: {output_dir}/drug_classifications.csv
 3. Validate that each medication aligns with the patient's diagnosed conditions
+   → Save to: {output_dir}/qc_flags.csv
 
 Please process all records and provide a summary of:
 - How many drugs were identified
@@ -163,6 +179,26 @@ Please process all records and provide a summary of:
         
         # Verify key information is in response
         assert "drug" in response_text.lower() or "medication" in response_text.lower()
+        
+        # Verify output files were created
+        print("\n" + "="*70)
+        print("📁 CHECKING OUTPUT FILES:")
+        print("="*70)
+        
+        expected_files = [
+            os.path.join(output_dir, "drug_names_extracted.csv"),
+            os.path.join(output_dir, "drug_classifications.csv"),
+            os.path.join(output_dir, "qc_flags.csv")
+        ]
+        
+        for filepath in expected_files:
+            if os.path.exists(filepath):
+                file_size = os.path.getsize(filepath)
+                print(f"✅ {filepath} ({file_size} bytes)")
+            else:
+                print(f"❌ {filepath} - NOT FOUND")
+                
+        print("="*70)
         print("\n✅ Full pipeline test completed successfully!")
 
 

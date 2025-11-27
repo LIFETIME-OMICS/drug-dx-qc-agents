@@ -26,34 +26,49 @@ def pytest_addoption(parser):
 # ============================================================================
 
 TEST_DIR = Path(__file__).parent
-INPUT_DIR = TEST_DIR / "input1"
-BASELINE_DIR = TEST_DIR / "baseline1"
 
-# Test input files
+# Test1: Original 3-patient test data with baselines
+INPUT_DIR = TEST_DIR / "test1" / "input1"
+BASELINE_DIR = TEST_DIR / "test1" / "baseline1"
+
+# Test input files (test1)
 TEST_INPUT_FILES = {
     'medications': INPUT_DIR / "medications_test.csv",
     'conditions': INPUT_DIR / "conditions_test.csv"
 }
 
-# Baseline files for test validation
+# Baseline files for test validation (test1)
 BASELINE_FILES = {
     'drug_classifications': BASELINE_DIR / "baseline_test_drug_classifications.csv",
-    'drug_names_extracted': BASELINE_DIR / "baseline_drug_names_extracted.csv",
+    'drug_names_extracted': BASELINE_DIR / "baseline_test_drug_names_extracted.csv",
     'atc_database': BASELINE_DIR / "baseline_atc_database.json",
     'test_atc_database': BASELINE_DIR / "baseline_test_atc_database.json",
     'qc_flags_test': BASELINE_DIR / "baseline_qc_flags_test.csv"
 }
 
+# Test2: 10-patient test data (no baselines - tests pipeline execution)
+INPUT_DIR_TEST2 = TEST_DIR / "test2" / "input2"
+TEST_INPUT_FILES_TEST2 = {
+    'medications': INPUT_DIR_TEST2 / "medications_test.csv",
+    'conditions': INPUT_DIR_TEST2 / "conditions_test.csv"
+}
+
 
 @pytest.fixture
 def test_input_files():
-    """Provide test input file paths to tests."""
+    """Provide test1 input file paths to tests."""
     return TEST_INPUT_FILES
 
 
 @pytest.fixture
+def test_input_files_test2():
+    """Provide test2 input file paths to tests (10 patients, no baselines)."""
+    return TEST_INPUT_FILES_TEST2
+
+
+@pytest.fixture
 def baseline_files():
-    """Provide baseline file paths to tests."""
+    """Provide baseline file paths to tests (test1 only)."""
     return BASELINE_FILES
 
 

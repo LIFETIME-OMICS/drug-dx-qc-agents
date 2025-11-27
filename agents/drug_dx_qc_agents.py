@@ -21,7 +21,7 @@ from config import ATC_DATABASE_PATH
 
 
 def create_drug_dx_qc_sequential_agent(
-    model: str = "gemini-2.5-flash",
+    model: str = "gemini-2.0-flash",
     atc_db_path: str = None
 ) -> SequentialAgent:
     """
@@ -72,7 +72,7 @@ def create_drug_dx_qc_sequential_agent(
 
 async def run_drug_dx_qc_pipeline(
     prompt: str,
-    model: str = "gemini-2.5-flash",
+    model: str = "gemini-2.0-flash",
     atc_db_path: str = None
 ) -> str:
     """

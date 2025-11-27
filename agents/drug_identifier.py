@@ -22,6 +22,7 @@ from typing import List, Dict, Optional, Tuple
 import logging
 import asyncio
 from .drug_extraction_tools import extract_drug_name_regex, extract_drug_names_from_list
+from .file_io_tools import read_csv_file, write_csv_file, write_dataframe_to_csv
 from config import TMP_DIR, LOGS_DIR
 
 # Configure logging
@@ -147,6 +148,11 @@ def create_drug_identifier_agent(model: str = "gemini-2.5-flash") -> Agent:
     extraction_tool = FunctionTool(extract_drug_name_regex)
     validation_tool = FunctionTool(validate_drug_extraction)
     
+    # File I/O tools for reading input and writing output
+    read_csv_tool = FunctionTool(read_csv_file)
+    write_csv_tool = FunctionTool(write_csv_file)
+    write_df_tool = FunctionTool(write_dataframe_to_csv)
+    
     # Create agent with tools
     agent = Agent(
         model=model,
@@ -182,6 +188,11 @@ Key Guidelines:
 - NEVER put explanatory text in drug_name - only the actual drug name
 - If validation fails, explain the issue clearly
 
+File I/O Operations:
+- Use read_csv_file() to read input CSV files
+- Use write_csv_file() to write output CSV (provide CSV-formatted string)
+- Use write_dataframe_to_csv() to write output from dictionary format
+
 Examples:
 - "amLODIPine 2.5 MG Oral Tablet" → "amlodipine"
 - "Acetaminophen 325 MG / Oxycodone Hydrochloride 5 MG" → "acetaminophen oxycodone"
@@ -189,7 +200,9 @@ Examples:
 - "Sodium Chloride 0.9% Injectable" → "sodium chloride" (sodium IS the drug, keep it!)
 - "Camila 28 Day Pack" → "norethindrone" (use your knowledge to identify the active ingredient)
 """,
-        tools=[columns_tool, sample_tool, column_sample_tool, extraction_tool, validation_tool]
+        tools=[columns_tool, sample_tool, column_sample_tool, extraction_tool, validation_tool, 
+               read_csv_tool, write_csv_tool, write_df_tool],
+        output_key="drug_names_extracted"
     )
     
     return agent

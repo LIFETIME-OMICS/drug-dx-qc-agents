@@ -33,50 +33,59 @@ from agents.drug_classifier import process_drug_names_file
 
 def build_atc_database(
     medications_file: str,
+    extracted_file: str = '',
     output_dir: str = "output"
 ) -> dict:
     """
-    Build ATC database by running the 2-agent pipeline.
+    Build ATC database by running the 1 or 2-agent pipeline.
     
     Args:
         medications_file: Path to input medications CSV file
+        extracted_file: Path to extracted drug names CSV (if provided, skips extraction)
         output_dir: Directory for all outputs (default: output)
         
     Returns:
         Dictionary with statistics
     """
     print("\n" + "="*70)
-    print("🏥 Building ATC Database - 2-Agent Pipeline")
-    print("="*70)
-    print(f"📥 Input: {medications_file}\n")
+    if extracted_file:
+        print("🏥 Building ATC Database - 1-Agent Pipeline")
+        print("="*70)
+        print(f"📥 Input: {extracted_file}\n")        
+    else:
+        print("🏥 Building ATC Database - 2-Agent Pipeline")
+        print("="*70)
+        print(f"📥 Input: {medications_file}\n")
     
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
     
     # Define output files
-    extracted_file = f"{output_dir}/drug_names_extracted.csv"
+    extracted_file_temp = extracted_file or f"{output_dir}/drug_names_extracted.csv"
     classified_file = f"{output_dir}/drug_classifications.csv"
     identifier_log = f"{output_dir}/drug_identifier_errors.log"
     classifier_log = f"{output_dir}/drug_classifier_errors.log"
     
-    # Step 1: Run drug_identifier agent
-    print("\n" + "="*70)
-    print("Step 1/2: Drug Identifier Agent")
-    print("="*70)
-    
-    try:
-        df_extracted = asyncio.run(process_medications_file(
-            input_file=medications_file,
-            output_file=extracted_file,
-            error_log=identifier_log
-        ))
+    # Step 1: Run drug_identifier agent (only if no extracted file provided)
+    if not extracted_file:
+        print("\n" + "="*70)
+        print("Step 1/2: Drug Identifier Agent")
+        print("="*70)
         
-        print(f"\n✅ Agent 1 complete: {len(df_extracted)} drugs extracted")
-        print(f"📤 Output: {extracted_file}")
-        
-    except Exception as e:
-        print(f"\n❌ Error in drug_identifier: {e}")
-        raise
+        try:
+            df_extracted = asyncio.run(process_medications_file(
+                input_file=medications_file,
+                output_file=extracted_file_temp,
+                error_log=identifier_log,
+                model="gemini-2.5-flash"
+            ))
+            
+            print(f"\n✅ Agent 1 complete: {len(df_extracted)} drugs extracted")
+            print(f"📤 Output: {extracted_file_temp}")
+            
+        except Exception as e:
+            print(f"\n❌ Error in drug_identifier: {e}")
+            raise
     
     # Step 2: Run drug_classifier agent
     print("\n" + "="*70)
@@ -85,9 +94,10 @@ def build_atc_database(
     
     try:
         df_classified = process_drug_names_file(
-            input_file=extracted_file,
+            input_file=extracted_file_temp,
             output_file=classified_file,
-            error_log=classifier_log
+            error_log=classifier_log,
+            model="gemini-2.5-flash"
         )
         
         successful = len(df_classified[~df_classified['atc_code'].isin(['UNKNOWN', 'ERROR'])])
@@ -114,7 +124,7 @@ def build_atc_database(
     return {
         'total_drugs': len(df_classified),
         'successful': successful,
-        'extracted_file': extracted_file,
+        'extracted_file': extracted_file_temp,
         'classified_file': classified_file
     }
 
@@ -125,15 +135,22 @@ if __name__ == "__main__":
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python scripts/build_atc_database2.py --medications data/medications.csv
-  python scripts/build_atc_database2.py --medications data/medications.csv --output-dir output
+  # Full pipeline (extract + classify):
+  python scripts/build_atc_database.py --medications data/medications.csv
+  
+  # Classification only (debug mode - skips extraction):
+  python scripts/build_atc_database.py --from-extracted output/drug_names_extracted.csv
         """
     )
     
     parser.add_argument(
         "--medications",
-        required=True,
-        help="Path to medications CSV file"
+        help="Path to medications CSV file (full pipeline)"
+    )
+    
+    parser.add_argument(
+        "--from-extracted",
+        help="Path to extracted drug names CSV (classification only - saves tokens)"
     )
     
     parser.add_argument(
@@ -144,11 +161,28 @@ Examples:
     
     args = parser.parse_args()
     
+    # Must specify either --medications or --from-extracted
+    if not args.medications and not args.from_extracted:
+        parser.error("Must specify either --medications or --from-extracted")
+    
+    if args.medications and args.from_extracted:
+        parser.error("Cannot specify both --medications and --from-extracted")
+    
     try:
-        stats = build_atc_database(
-            medications_file=args.medications,
-            output_dir=args.output_dir
-        )
+        if args.from_extracted:
+            # Debug mode: classification only
+            stats = build_atc_database(
+                medications_file='',
+                extracted_file=args.from_extracted,
+                output_dir=args.output_dir
+            )
+        else:
+            # Full pipeline
+            stats = build_atc_database(
+                medications_file=args.medications,
+                extracted_file='',
+                output_dir=args.output_dir
+            )
         
         sys.exit(0)
         

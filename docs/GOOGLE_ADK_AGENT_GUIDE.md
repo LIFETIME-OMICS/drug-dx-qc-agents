@@ -1,18 +1,30 @@
-# 📘 Google ADK Agent Coding Guide (InMemoryRunner Pattern)
+# 📘 Google ADK Agent Coding Guide
 
-This guide documents the correct, simplified pattern for creating agents in this project, based on the architecture in `agents/drug_identifier.py`.
+This guide documents the two agent patterns used in this project.
 
-**CRITICAL**: All agents in this project MUST follow this pattern.
+**CRITICAL**: Choose the right pattern for your use case.
 
 ---
 
-## 🏛️ The Core Architecture: `InMemoryRunner`
+## 🏛️ Two Core Architectures
 
-For our batch processing tasks (reading a file, processing data, writing a file), we use a **stateless** agent pattern. The `InMemoryRunner` is the perfect tool for this.
+### 1. `InMemoryRunner` Pattern (Stateless Batch Processing)
+
+For batch processing tasks (reading a file, processing data, writing a file), we use a **stateless** agent pattern.
 
 - **What it is**: A lightweight executor for single-turn agent tasks.
-- **Why we use it**: Our agents don't need to remember past conversations. Each task (like classifying a drug) is independent. This is efficient and simple.
-- **What we AVOID**: `Stateful Agents` or `SessionService`. These are for multi-turn chatbots and would add unnecessary complexity here.
+- **When to use**: Independent, repeatable tasks that don't need conversation history.
+- **Examples**: `drug_identifier`, `drug_classifier`, `qc_evaluator`
+- **Key benefit**: Simple, efficient, no state management overhead.
+
+### 2. `SessionService` Pattern (Stateful Interactive Analysis)
+
+For interactive data analysis with multi-turn conversations, we use a **stateful** session pattern.
+
+- **What it is**: A conversation-based executor that maintains context across multiple queries.
+- **When to use**: Interactive analysis, follow-up questions, exploratory data work.
+- **Examples**: `stats_summarizer` (with Code Execution for pandas/matplotlib)
+- **Key benefit**: Agent remembers previous queries and can build on prior analysis.
 
 ---
 
@@ -210,3 +222,160 @@ An LLM's behavior is heavily influenced by its instructions.
   - **Example**: `suggest_synonyms_async` and `enrich_icd10_async` make direct calls because we are asking for general knowledge (synonyms, common indications) that is not available through a specific tool. This prevents the agent from incorrectly trying (and failing) to use a tool for the task.
 
 This hybrid approach is a sophisticated and robust design pattern that leverages the best of both worlds: the structured, reliable output of tool-based agents and the broad, flexible knowledge of direct LLM access.
+
+---
+
+## 💬 SessionService Pattern (Stateful Interactive Analysis)
+
+For interactive, exploratory data analysis, use the **SessionService** pattern (Kaggle Day 3a).
+
+### When to Use SessionService
+
+Use this pattern when you need:
+- **Multi-turn conversations**: User asks follow-up questions
+- **Stateful context**: Agent remembers previous queries and analysis
+- **Interactive exploration**: User drills down into data iteratively
+- **Code Execution**: Agent writes and runs pandas/matplotlib code to analyze data
+
+### The SessionService Pattern (4 Steps)
+
+#### 1. Create Agent with Code Execution
+
+```python
+def create_stats_summarizer_agent(model: str = "gemini-2.0-flash-exp") -> Agent:
+    """Create interactive analysis agent with Code Execution."""
+    agent = Agent(
+        model=model,
+        name="stats_summarizer",
+        instruction="""You are a data analyst.
+        
+Use Code Execution to analyze data with pandas.
+Create tables, charts, and insights.""",
+        tools=[
+            FunctionTool(load_data),
+            FunctionTool(get_summary)
+        ],
+        config={
+            "code_execution": True  # KEY: Enable Code Execution
+        }
+    )
+    return agent
+```
+
+#### 2. Create Session Management Functions
+
+```python
+from google.adk.sessions import SessionService
+
+_session_service: Optional[SessionService] = None
+_session_data: Dict[str, Any] = {}  # Store data by session_id
+
+async def create_analysis_session(data_file: str) -> str:
+    """Create a new analysis session."""
+    global _session_service
+    
+    if _session_service is None:
+        _session_service = SessionService()
+    
+    agent = create_stats_summarizer_agent()
+    session_id = await _session_service.create_session(agent=agent)
+    
+    # Load data for this session
+    _session_data[session_id] = load_data_from_file(data_file)
+    
+    return session_id
+
+async def query_session(session_id: str, query: str) -> str:
+    """Send a query to the session."""
+    response = await _session_service.send(
+        session_id=session_id,
+        user_message=query
+    )
+    return response.text
+
+async def close_session(session_id: str) -> None:
+    """Close the session and clean up."""
+    await _session_service.close_session(session_id=session_id)
+    del _session_data[session_id]
+```
+
+#### 3. Use Tools to Access Session Data
+
+Your tool functions need access to the session's data:
+
+```python
+def get_top_drugs(session_id: str, n: int = 10) -> str:
+    """Get top N drugs from session data."""
+    if session_id not in _session_data:
+        return "No data loaded for this session."
+    
+    df = _session_data[session_id]['medications']
+    top_drugs = df['drug_name'].value_counts().head(n)
+    return top_drugs.to_string()
+```
+
+#### 4. Interactive Multi-Turn Usage
+
+```python
+# Create session
+session_id = await create_analysis_session("data/medications.csv")
+
+# Turn 1
+response = await query_session(
+    session_id,
+    "Show me the top 10 most prescribed drugs"
+)
+print(response)
+
+# Turn 2 - Agent remembers context!
+response = await query_session(
+    session_id,
+    "Now create a bar chart of those top 10"
+)
+print(response)
+
+# Turn 3 - Follow-up question
+response = await query_session(
+    session_id,
+    "What percentage of total prescriptions do they represent?"
+)
+print(response)
+
+# Clean up
+await close_session(session_id)
+```
+
+### Key Differences: InMemoryRunner vs SessionService
+
+| Feature | InMemoryRunner | SessionService |
+|---------|----------------|----------------|
+| **State** | Stateless | Stateful |
+| **Turns** | Single-turn | Multi-turn |
+| **Use Case** | Batch processing | Interactive analysis |
+| **Context** | None | Remembers conversation |
+| **Code Execution** | Not typically used | Perfect for pandas/matplotlib |
+| **Example** | Drug classifier | Stats summarizer |
+
+### Example: Stats Summarizer Agent
+
+See `agents/stats_summarizer.py` for a complete implementation of the SessionService pattern with Code Execution for interactive data analysis.
+
+**Usage:**
+```python
+from agents.stats_summarizer import create_stats_session, query_stats_session
+
+# Create session with data
+session_id = await create_stats_session(
+    medications_file="data/medications.csv",
+    diagnoses_file="data/diagnoses.csv"
+)
+
+# Interactive queries
+await query_stats_session(session_id, "How many patients are in the data?")
+await query_stats_session(session_id, "Show me drug usage by class")
+await query_stats_session(session_id, "Create a chart of the top 10 drugs")
+```
+
+---
+
+By understanding both patterns, you can choose the right tool for the job: InMemoryRunner for efficient batch processing, and SessionService for rich, interactive analysis.

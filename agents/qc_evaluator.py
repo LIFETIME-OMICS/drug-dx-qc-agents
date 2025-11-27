@@ -34,6 +34,7 @@ from google.adk.tools import FunctionTool
 from google.adk.models import Gemini
 from google.adk.runners import InMemoryRunner
 from .drug_extraction_tools import extract_drug_name_regex
+from .file_io_tools import read_csv_file, write_csv_file, write_dataframe_to_csv
 
 # Add project root to path for config import
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -48,130 +49,79 @@ logger = logging.getLogger(__name__)
 
 
 # ============================================================================
-# HELPER FUNCTIONS
+# CORE TOOL FUNCTIONS (Used by both Python & Agent Orchestration)
 # ============================================================================
-
-def is_in_icd10_range(icd10_code: str, icd10_range: str) -> bool:
-    """
-    Check if an ICD-10 code falls within a specified range.
-    
-    Examples:
-        is_in_icd10_range("I10", "I10-I15") → True
-        is_in_icd10_range("I50.9", "I30-I52") → True
-        is_in_icd10_range("E11.9", "I10-I15") → False
-    
-    Args:
-        icd10_code: ICD-10 code to check (e.g., "I10", "I50.9")
-        icd10_range: ICD-10 range (e.g., "I10-I15", "J00-J99")
-        
-    Returns:
-        True if code is in range, False otherwise
-    """
-    if not icd10_code or not icd10_range or '-' not in icd10_range:
-        return False
-    
-    # Extract base code (remove decimal part)
-    code_base = icd10_code.split('.')[0]
-    
-    # Parse range
-    try:
-        range_start, range_end = icd10_range.split('-')
-        range_start = range_start.strip()
-        range_end = range_end.strip()
-        
-        # Simple alphabetical comparison works for ICD-10 codes
-        return range_start <= code_base <= range_end
-    except:
-        return False
-
-
-def check_diagnosis_match_tool(
-    drug_name: str,
-    drug_class: str,
-    expected_icd10_codes: str,
-    actual_icd10_codes: str
-) -> str:
-    """
-    Tool: Check if actual diagnoses match expected ICD-10 codes for a drug.
-    
-    Args:
-        drug_name: Name of the drug
-        drug_class: ATC drug class
-        expected_icd10_codes: Expected ICD-10 codes (semicolon-separated)
-        actual_icd10_codes: Actual patient ICD-10 codes (semicolon-separated)
-    
-    Returns:
-        JSON string with match assessment
-    """
-    expected = [c.strip() for c in expected_icd10_codes.split(';') if c.strip()]
-    actual = [c.strip() for c in actual_icd10_codes.split(';') if c.strip()]
-    
-    # Check exact matches
-    exact_matches = set(expected) & set(actual)
-    
-    if exact_matches:
-        return json.dumps({
-            'status': 'PASS',
-            'match_type': 'exact',
-            'matched_codes': list(exact_matches),
-            'reason': f'Exact ICD-10 match found: {list(exact_matches)}'
-        })
-    
-    return json.dumps({
-        'status': 'FAIL',
-        'match_type': 'none',
-        'matched_codes': [],
-        'reason': f'No matching diagnosis found. Expected: {expected}, Actual: {actual}'
-    })
-
 
 def check_range_match_tool(
     actual_icd10_code: str,
     expected_icd10_range: str
-) -> str:
+) -> Dict:
     """
-    Tool: Check if an ICD-10 code falls within an expected range.
+    Check if an ICD-10 code falls within an expected range.
+    
+    This is the single source of truth for range checking, used by both:
+    - Python orchestration (evaluate_medications calls this directly)
+    - Agent orchestration (agent uses this as a tool via wrapper)
+    
+    Examples:
+        check_range_match_tool("I10", "I10-I15") → {'match': True, ...}
+        check_range_match_tool("I50.9", "I30-I52") → {'match': True, ...}
+        check_range_match_tool("E11.9", "I10-I15") → {'match': False, ...}
     
     Args:
-        actual_icd10_code: Actual ICD-10 code (e.g., "I10")
-        expected_icd10_range: Expected range (e.g., "I10-I15")
+        actual_icd10_code: Actual ICD-10 code (e.g., "I10", "I50.9")
+        expected_icd10_range: Expected range (e.g., "I10-I15", "J00-J99")
     
     Returns:
-        JSON string with range match result
+        Dictionary with range match result
     """
-    match = is_in_icd10_range(actual_icd10_code, expected_icd10_range)
+    if not actual_icd10_code or not expected_icd10_range or '-' not in expected_icd10_range:
+        return {
+            'match': False,
+            'code': actual_icd10_code,
+            'range': expected_icd10_range
+        }
     
-    return json.dumps({
-        'match': match,
-        'code': actual_icd10_code,
-        'range': expected_icd10_range
-    })
-
-
-def load_atc_database(atc_db_path: str = None) -> Dict:
-    """Load ATC database with ICD-10 mappings."""
-    db_path = atc_db_path or ATC_DATABASE_PATH
-    if not os.path.exists(db_path):
-        logger.warning(f"⚠️  ATC database not found: {db_path}")
-        return {}
+    # Extract base code (remove decimal part)
+    code_base = actual_icd10_code.split('.')[0]
     
-    with open(db_path, 'r') as f:
-        return json.load(f)
+    # Parse range
+    try:
+        range_start, range_end = expected_icd10_range.split('-')
+        range_start = range_start.strip()
+        range_end = range_end.strip()
+        
+        # Simple alphabetical comparison works for ICD-10 codes
+        match = range_start <= code_base <= range_end
+        
+        return {
+            'match': match,
+            'code': actual_icd10_code,
+            'range': expected_icd10_range
+        }
+    except:
+        return {
+            'match': False,
+            'code': actual_icd10_code,
+            'range': expected_icd10_range
+        }
 
 
-def check_diagnosis_match(
+def check_diagnosis_match_tool(
     expected_icd10_codes: List[str],
     expected_icd10_ranges: List[str],
     actual_icd10_codes: List[str]
 ) -> Dict:
     """
-    Rule-based diagnosis matching (no LLM).
+    Check if actual diagnoses match expected ICD-10 codes or ranges.
     
-    Check if actual diagnoses match expected ICD-10 codes/ranges.
+    This is the single source of truth for diagnosis matching, used by both:
+    - Python orchestration (evaluate_medications calls this directly)
+    - Agent orchestration (agent uses this as a tool via wrapper)
     
     Args:
         expected_icd10_codes: Specific ICD-10 codes for drug
-        expected_icd10_ranges: ICD-10 ranges for drug
+        expected_icd10_ranges: ICD-10 ranges for drug (e.g., ["I10-I15", "E10-E14"])
         actual_icd10_codes: Patient's actual diagnosis codes
         
     Returns:
@@ -187,11 +137,12 @@ def check_diagnosis_match(
             'matched_codes': list(exact_matches)
         }
     
-    # Check range matches
+    # Check range matches using check_range_match_tool
     range_matches = []
     for actual_code in actual_icd10_codes:
         for expected_range in expected_icd10_ranges:
-            if is_in_icd10_range(actual_code, expected_range):
+            result = check_range_match_tool(actual_code, expected_range)
+            if result['match']:
                 range_matches.append({
                     'code': actual_code,
                     'range': expected_range
@@ -213,6 +164,54 @@ def check_diagnosis_match(
 
 
 # ============================================================================
+# AGENT TOOL WRAPPERS (Convert to JSON strings for ADK)
+# ============================================================================
+
+def check_diagnosis_match_tool_wrapper(
+    drug_name: str,
+    drug_class: str,
+    expected_icd10_codes: str,
+    expected_icd10_ranges: str,
+    actual_icd10_codes: str
+) -> str:
+    """
+    Agent tool wrapper: Check if actual diagnoses match expected ICD-10 codes or ranges.
+    
+    This is the ONLY tool the agent needs for diagnosis matching.
+    Internally calls check_diagnosis_match_tool() which uses check_range_match_tool() for range checking.
+    
+    Converts string inputs to lists and returns JSON string for agent consumption.
+    
+    Args:
+        drug_name: Name of the drug
+        drug_class: ATC drug class
+        expected_icd10_codes: Expected ICD-10 codes (semicolon-separated, e.g., "I10;E11.9")
+        expected_icd10_ranges: Expected ICD-10 ranges (semicolon-separated, e.g., "I10-I15;E10-E14")
+        actual_icd10_codes: Actual patient ICD-10 codes (semicolon-separated)
+    
+    Returns:
+        JSON string with match assessment
+    """
+    expected_codes = [c.strip() for c in expected_icd10_codes.split(';') if c.strip()]
+    expected_ranges = [r.strip() for r in expected_icd10_ranges.split(';') if r.strip()]
+    actual = [c.strip() for c in actual_icd10_codes.split(';') if c.strip()]
+    
+    # Call core tool function (which internally uses check_range_match_tool)
+    result = check_diagnosis_match_tool(expected_codes, expected_ranges, actual)
+    
+    # Add clinical reasoning to result
+    if result['status'] == 'PASS':
+        if result['match_type'] == 'exact':
+            result['reason'] = f"Exact ICD-10 match found: {result['matched_codes']}"
+        elif result['match_type'] == 'range':
+            result['reason'] = f"Range match found: {result['matched_codes']}"
+    else:
+        result['reason'] = f"No matching diagnosis found. Expected codes: {expected_codes}, Expected ranges: {expected_ranges}, Actual: {actual}"
+    
+    return json.dumps(result)
+
+
+# ============================================================================
 # AGENT CREATION
 # ============================================================================
 
@@ -228,117 +227,53 @@ def create_qc_evaluator_agent(model: str = "gemini-2.5-flash") -> Agent:
     Returns:
         Configured Google ADK Agent
     """
-    # Create tools from functions
-    check_diagnosis_tool = FunctionTool(check_diagnosis_match_tool)
-    check_range_tool = FunctionTool(check_range_match_tool)
+    # Create tools from wrapper functions (return JSON strings for agent)
+    # Note: check_diagnosis_tool internally uses check_range_match_tool for range checking
+    check_diagnosis_tool = FunctionTool(check_diagnosis_match_tool_wrapper)
+    
+    # File I/O tools
+    read_csv_tool = FunctionTool(read_csv_file)
+    write_csv_tool = FunctionTool(write_csv_file)
+    write_df_tool = FunctionTool(write_dataframe_to_csv)
     
     # Create agent with tools and instruction
     agent = Agent(
         model=model,
         name="qc_evaluator",
-        tools=[check_diagnosis_tool, check_range_tool],
+        tools=[
+            check_diagnosis_tool,
+            read_csv_tool,
+            write_csv_tool,
+            write_df_tool
+        ],
         instruction="""
 You are a clinical QC evaluator specializing in medication-diagnosis alignment.
 
 Your task is to assess whether prescribed medications are clinically appropriate
 for a patient's diagnosed conditions by:
-1. Checking if ICD-10 codes match expected indications
-2. Evaluating clinical appropriateness using medical reasoning
-3. Identifying potential prescribing errors or inconsistencies
+1. Reading the drug classifications CSV (output from drug_classifier agent) which contains:
+   - drug_name, atc_code, atc_class, indication, icd10_codes (expected diagnoses)
+2. Reading the patient conditions CSV which contains actual ICD-10 diagnoses
+3. For each medication, checking if the patient's actual diagnoses match the drug's expected ICD-10 codes
+4. Using check_diagnosis_match_tool_wrapper() to validate matches
+   - This tool handles both exact code matches AND range matches automatically
 
-Use the provided tools to check diagnosis matches and ICD-10 range membership.
+File I/O Operations:
+- Use read_csv_file() to read drug classifications and conditions CSV files
+- Use write_csv_file() to write output CSV (provide CSV-formatted string)
+- Use write_dataframe_to_csv() to write output from dictionary format
+
+Input files you'll receive:
+- Drug classifications CSV: contains drug_name, atc_code, atc_class, indication, icd10_codes
+- Patient conditions CSV: contains patient, encounter, code (ICD-10 diagnoses)
+
+Use check_diagnosis_match_tool_wrapper() for all diagnosis validation - it handles both exact matches and range checking.
 Provide clear PASS/FAIL assessments with clinical reasoning.
-"""
+""",
+        output_key="qc_flags"
     )
     
     return agent
-
-
-# ============================================================================
-# AGENT EXECUTION WITH INMEMORYRUNNER
-# ============================================================================
-
-async def evaluate_diagnosis_match_async(
-    drug_name: str,
-    drug_class: str,
-    expected_icd10_codes: List[str],
-    expected_icd10_ranges: List[str],
-    actual_icd10_codes: List[str],
-    use_llm: bool = False,
-    agent: Agent = None,
-    model: str = "gemini-2.5-flash"
-) -> Dict:
-    """
-    LLM-based diagnosis matching using InMemoryRunner pattern.
-    
-    Use this method when rule-based matching is insufficient and you need
-    clinical reasoning to assess medication-diagnosis alignment.
-    
-    Args:
-        drug_name: Name of the drug
-        drug_class: ATC drug class
-        expected_icd10_codes: Expected ICD-10 codes for this drug
-        expected_icd10_ranges: Expected ICD-10 ranges for this drug
-        actual_icd10_codes: Patient's actual diagnosis codes
-        use_llm: If False, use rule-based matching only
-        agent: Optional pre-created agent
-        model: Model to use if creating new agent
-        
-    Returns:
-        Dictionary with match status and clinical reasoning
-    """
-    # Rule-based matching first
-    if not use_llm:
-        return check_diagnosis_match(
-            expected_icd10_codes,
-            expected_icd10_ranges,
-            actual_icd10_codes
-        )
-    
-    # LLM-based evaluation with clinical reasoning
-    if agent is None:
-        agent = create_qc_evaluator_agent(model=model)
-    
-    runner = InMemoryRunner(agent=agent)
-    
-    prompt = f"""
-Evaluate medication-diagnosis alignment:
-
-Drug: {drug_name}
-Drug Class: {drug_class}
-Expected ICD-10 Codes: {', '.join(expected_icd10_codes) if expected_icd10_codes else 'None'}
-Expected ICD-10 Ranges: {', '.join(expected_icd10_ranges) if expected_icd10_ranges else 'None'}
-Actual Patient ICD-10 Codes: {', '.join(actual_icd10_codes) if actual_icd10_codes else 'None'}
-
-Use the check_diagnosis_match_tool to assess if this medication is clinically appropriate
-for the patient's diagnoses. Consider:
-1. Exact ICD-10 code matches
-2. Related diagnostic codes that may not match exactly
-3. Clinical appropriateness (e.g., is this drug reasonable for these diagnoses?)
-
-Provide your assessment.
-"""
-    
-    response = await runner.run_debug(prompt, quiet=True)
-    
-    # Parse response for structured data
-    response_text = response.generations[0].candidate.content.parts[0].text
-    
-    # Try to extract structured assessment from response
-    if "PASS" in response_text.upper():
-        return {
-            'status': 'PASS',
-            'match_type': 'llm_assessment',
-            'matched_codes': actual_icd10_codes,
-            'reasoning': response_text
-        }
-    else:
-        return {
-            'status': 'FAIL',
-            'match_type': 'llm_assessment',
-            'matched_codes': [],
-            'reasoning': response_text
-        }
 
 
 # ============================================================================
@@ -348,7 +283,7 @@ Provide your assessment.
 def evaluate_medications(
     medications_file: str,
     conditions_file: str,
-    atc_database: Dict,
+    drug_classifications_file: str,
     output_file: str = "output/qc_flags.csv"
 ) -> pd.DataFrame:
     """
@@ -357,7 +292,7 @@ def evaluate_medications(
     Args:
         medications_file: Path to medications CSV
         conditions_file: Path to conditions CSV
-        atc_database: Loaded ATC database dictionary
+        drug_classifications_file: Path to drug classifications CSV (output from drug_classifier)
         output_file: Path to output QC flags CSV
         
     Returns:
@@ -366,14 +301,42 @@ def evaluate_medications(
     logger.info(f"Starting QC evaluation")
     logger.info(f"📥 Medications: {medications_file}")
     logger.info(f"📥 Conditions: {conditions_file}")
+    logger.info(f"📥 Classifications: {drug_classifications_file}")
     logger.info(f"📤 Output: {output_file}")
     
     # Load data
     medications_df = pd.read_csv(medications_file)
     conditions_df = pd.read_csv(conditions_file)
+    classifications_df = pd.read_csv(drug_classifications_file)
+    
+    # Convert classifications to dictionary for fast lookup
+    drug_lookup = {}
+    for _, row in classifications_df.iterrows():
+        drug_name = row['drug_name'].lower().strip()
+        # Parse icd10_codes - it may be JSON string or comma-separated
+        icd10_codes_raw = row.get('icd10_codes', '')
+        if isinstance(icd10_codes_raw, str):
+            # Try parsing as JSON first
+            try:
+                import json
+                icd10_codes = json.loads(icd10_codes_raw)
+            except:
+                # Fall back to comma-separated
+                icd10_codes = [code.strip() for code in icd10_codes_raw.split(',') if code.strip()]
+        else:
+            icd10_codes = []
+        
+        drug_lookup[drug_name] = {
+            'code': row.get('atc_code', 'UNKNOWN'),
+            'drug_class': row.get('atc_class', 'Unknown'),
+            'indication': row.get('indication', ''),
+            'icd10_codes': icd10_codes,
+            'indication_icd10_ranges': []  # Not in CSV format
+        }
     
     logger.info(f"📊 Loaded {len(medications_df)} medication records")
     logger.info(f"📊 Loaded {len(conditions_df)} condition records")
+    logger.info(f"📊 Loaded {len(drug_lookup)} drug classifications")
     
     # Results list
     qc_results = []
@@ -386,10 +349,11 @@ def evaluate_medications(
         
         # Extract drug name
         drug_name = extract_drug_name_regex(drug_description)
+        drug_key = drug_name.lower().strip()
         
-        # Get ATC data for drug
-        if drug_name not in atc_database:
-            logger.warning(f"⚠️  Drug not in ATC database: {drug_name}")
+        # Get drug classification data
+        if drug_key not in drug_lookup:
+            logger.warning(f"⚠️  Drug not in classifications: {drug_name}")
             qc_results.append({
                 'patient_id': patient_id,
                 'encounter_id': encounter_id,
@@ -406,7 +370,7 @@ def evaluate_medications(
             })
             continue
         
-        drug_data = atc_database[drug_name]
+        drug_data = drug_lookup[drug_key]
         expected_codes = drug_data.get('icd10_codes', [])
         expected_ranges = drug_data.get('indication_icd10_ranges', [])
         
@@ -418,8 +382,8 @@ def evaluate_medications(
         
         actual_codes = encounter_conditions['code'].tolist()
         
-        # Check for match using rule-based matching
-        match_result = check_diagnosis_match(
+        # Check for match using core tool function
+        match_result = check_diagnosis_match_tool(
             expected_codes,
             expected_ranges,
             actual_codes
@@ -469,7 +433,7 @@ def evaluate_medications(
 def evaluate_qc(
     medications_file: str = None,
     conditions_file: str = None,
-    atc_db_path: str = None,
+    drug_classifications_file: str = None,
     output_file: str = None
 ) -> pd.DataFrame:
     """
@@ -478,30 +442,29 @@ def evaluate_qc(
     Args:
         medications_file: Path to medications CSV (default: from config.py)
         conditions_file: Path to conditions CSV (default: from config.py)
-        atc_db_path: Path to ATC database (default: from config.py)
+        drug_classifications_file: Path to drug classifications CSV (default: output/drug_classifications.csv)
         output_file: Path to output QC flags CSV (default: from config.py)
         
     Returns:
         DataFrame with QC evaluation results
     """
+    from config import OUTPUT_DIR
+    
     # Use config defaults if not specified
     medications_file = medications_file or TEST_MEDICATIONS_FILE
     conditions_file = conditions_file or TEST_CONDITIONS_FILE
-    atc_db_path = atc_db_path or ATC_DATABASE_PATH
+    drug_classifications_file = drug_classifications_file or str(OUTPUT_DIR / "drug_classifications.csv")
     output_file = output_file or QC_FLAGS_OUTPUT
     
     print("\n" + "="*70)
     print("🔍 QC EVALUATOR AGENT - Medication-Diagnosis Alignment Check")
     print("="*70)
     
-    # Load ATC database
-    atc_database = load_atc_database(atc_db_path)
-    
     # Evaluate medications
     results = evaluate_medications(
         medications_file=medications_file,
         conditions_file=conditions_file,
-        atc_database=atc_database,
+        drug_classifications_file=drug_classifications_file,
         output_file=output_file
     )
     

@@ -12,8 +12,8 @@ import pandas as pd
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agents.qc_evaluator import create_qc_evaluator_agent, evaluate_qc, load_atc_database
-from config import ATC_DATABASE_PATH
+from agents.qc_evaluator import create_qc_evaluator_agent, evaluate_qc
+from config import OUTPUT_DIR
 
 
 class TestQCEvaluator:
@@ -25,10 +25,6 @@ class TestQCEvaluator:
         
         assert agent is not None
         assert agent.name == "qc_evaluator"
-        
-        # Test database loading separately
-        atc_database = load_atc_database(ATC_DATABASE_PATH)
-        assert atc_database is not None
         
         print("✅ QC Evaluator agent created successfully")
     
@@ -44,6 +40,7 @@ class TestQCEvaluator:
         
         medications_file = str(test_input_files['medications'])
         conditions_file = str(test_input_files['conditions'])
+        drug_classifications_file = str(OUTPUT_DIR / "drug_classifications.csv")
         output_file = "tests/tmp/qc_flags_test.csv"
         
         print("\n" + "="*70)
@@ -51,12 +48,14 @@ class TestQCEvaluator:
         print("="*70)
         print(f"📥 Medications: {medications_file}")
         print(f"📥 Conditions: {conditions_file}")
+        print(f"📥 Classifications: {drug_classifications_file}")
         print(f"📤 Output: {output_file}")
         
         # Run QC evaluation
         results_df = evaluate_qc(
             medications_file=medications_file,
             conditions_file=conditions_file,
+            drug_classifications_file=drug_classifications_file,
             output_file=output_file
         )
         

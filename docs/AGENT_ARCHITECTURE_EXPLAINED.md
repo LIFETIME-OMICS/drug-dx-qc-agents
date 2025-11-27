@@ -2,10 +2,18 @@
 
 ## Overview
 
-This project uses a **two-agent pipeline** to classify drugs from medications data into WHO ATC codes.
+This project uses a **4-agent system** for drug-diagnosis quality control with two architectural patterns:
 
+**Batch Processing Pipeline** (3 agents, stateless):
 ```
-medications.csv → Agent 1 → drug_names.csv → Agent 2 → classifications.csv + atc_database.json
+medications.csv → Drug Identifier → drug_names.csv → Drug Classifier → classifications.csv + atc_database.json
+                                                            ↓
+                                      diagnoses.csv → QC Evaluator → qc_flags.csv
+```
+
+**Interactive Analysis** (1 agent, stateful):
+```
+classifications.csv + diagnoses.csv + qc_flags.csv → Stats Summarizer (SessionService) → Interactive queries, charts
 ```
 
 ---
@@ -36,35 +44,141 @@ metformin
 
 ## Agent 2: Drug Classifier
 
-**Purpose**: Classify drugs to WHO ATC codes using hybrid WHO + LLM approach
+**Purpose**: Classify drugs to WHO ATC codes with ICD-10 enrichment
 
 **Input**: `data/drug_names_extracted.csv`
 
 **Process** (Hybrid WHO + LLM):
 1. **Check local database** → Found? Use it! (instant)
-2. **WHO ATC/DDD Index lookup** → Found? Save and use! (10 sec delay)
+2. **WHO ATC/DDD Index lookup** → Found? Save and use!
 3. **LLM synonym suggestion** → Retry WHO with synonyms
-4. **LLM fallback** → Classify with AI (flagged for verification)
+4. **ICD-10 enrichment** → Direct LLM call for indication & ICD-10 codes
 
 **Outputs**:
-- `data/drug_classifications.csv` - Detailed results with all fields
+- `data/drug_classifications.csv` - Detailed results with ATC codes & ICD-10
 - `data/atc_database.json` - Persistent database (incrementally updated)
 
 **Technology**: 
-- WHO web scraping (authoritative source)
-- Google Gemini 2.5-flash (synonym suggestion + fallback)
+- WHO web scraping (authoritative ATC codes)
+- Direct LLM calls (synonym suggestion, ICD-10 enrichment)
+
+**Pattern**: InMemoryRunner (stateless batch processing)
 
 ---
 
-## Intermediate Files
+## Agent 3: QC Evaluator
 
-| File | Created By | Purpose | Keep? |
-|------|------------|---------|-------|
-| `drug_names_extracted.csv` | Agent 1 | Clean drug names | No (temporary) |
-| `drug_classifications.csv` | Agent 2 | Detailed classification results | No (temporary) |
-| `atc_database.json` | Agent 2 | Persistent drug → ATC mapping | **Yes** (commit to git) |
+**Purpose**: Validate drug-diagnosis alignment across patients
 
-**Note**: Intermediate files are automatically cleaned up on each pipeline run. Only `atc_database.json` persists.
+**Input**: 
+- `drug_classifications.csv` (with ATC codes & ICD-10)
+- `diagnoses.csv` (patient conditions)
+
+**Process**:
+1. Match patient medications to diagnoses
+2. Check if diagnosis ICD-10 codes align with drug indication ICD-10 ranges
+3. Flag misalignments (e.g., diabetes drug but no diabetes diagnosis)
+
+**Output**: `data/qc_flags.csv` with alignment flags per patient
+
+**Technology**: Pandas + rule-based matching
+
+**Pattern**: InMemoryRunner (stateless batch processing)
+
+---
+
+## Agent 4: Stats Summarizer
+
+**Purpose**: Interactive analysis of data across ALL patients
+
+**Input**:
+- `drug_classifications.csv`
+- `diagnoses.csv`
+- `qc_flags.csv` 
+
+**Process**:
+1. User creates a session with data files
+2. Data is loaded and converted to CSV strings
+3. CSV strings are embedded in the agent's instruction
+4. User asks questions in natural language
+5. Agent uses Code Execution to write pandas/matplotlib code
+6. Agent loads data from CSV strings using `pd.read_csv(StringIO(...))`
+7. Agent returns tables, statistics, or charts
+8. User can ask follow-up questions (agent remembers context!)
+
+**Output**: Interactive responses (tables, charts, insights)
+
+**Technology**: 
+- `InMemorySessionService` (stateful, multi-turn conversations)
+- `Runner` (orchestrates agent execution with session management)
+- `BuiltInCodeExecutor` (dynamic pandas/matplotlib code generation)
+- CSV string embedding (data passed directly in agent instruction)
+
+**Pattern**: SessionService (stateful interactive analysis)
+
+**Key Implementation Detail**:
+The `BuiltInCodeExecutor` runs in a sandboxed environment that **cannot access local files**. Therefore, we embed the CSV data directly as strings in the agent's instruction:
+
+```python
+instruction=f"""
+IMPORTANT: At the start of EVERY analysis, load the data:
+
+import pandas as pd
+from io import StringIO
+
+medications_df = pd.read_csv(StringIO('''
+{meds_csv}
+'''))
+
+diagnoses_df = pd.read_csv(StringIO('''
+{diag_csv}
+'''))
+
+qc_flags_df = pd.read_csv(StringIO('''
+{qc_csv}
+'''))
+"""
+```
+
+This ensures the agent has access to the actual data in its isolated execution environment.
+
+**Example queries**:
+- "Show me the top 10 most prescribed drugs"
+- "How many patients have QC errors?"
+- "Create a bar chart of drug usage by class"
+- "What percentage had successful ATC classification?"
+
+---
+
+## Demo
+scripts\demo_stats_summarizer.py prompts the stats_summarizer agent but first looks whether the input files are in the working directory shows that:
+(1) agents\drug_dx_qc_agents.py was executed and it has generated: 
+ - drug_names_extracted.csv generated by agent in agents\drug_identifier.py   
+ - drug_classifications.csv generated by agent in agents\drug_classifier.py   
+ - qc_flags_test.csv generated by agent in agents\qc_evaluator.py  
+(2) agents\drug_dx_qc_agents.py has not executed or only partially executed then it should be executed to generate those files.
+
+## Output Files
+
+### Batch Pipeline Outputs (Agents 1-3)
+
+| File | Created By | Granularity | Purpose | Keep? |
+|------|------------|-------------|---------|-------|
+| `drug_names_extracted.csv` | Agent 1 | Per drug | Clean drug names | Temporary |
+| `drug_classifications.csv` | Agent 2 | Per drug | ATC codes & ICD-10 | **Yes** (input to Agent 3 & 4) |
+| `atc_database.json` | Agent 2 | Per drug | Persistent drug → ATC mapping | **Yes** (commit to git) |
+| `qc_flags.csv` | Agent 3 | Per patient | Drug-diagnosis alignment flags | **Yes** (input to Agent 4) |
+
+### Interactive Analysis Outputs (Agent 4)
+
+| Output | Granularity | Examples |
+|--------|-------------|----------|
+| Summary tables | Across all patients | "Top 10 drugs by patient count" |
+| Statistics | Aggregate metrics | "15% of patients have QC errors" |
+| Charts/graphs | Population-level | "Bar chart of drug usage by class" |
+| Insights | Patterns & trends | "Most common drug-diagnosis misalignments" |
+
+**Note**: Agent 4 doesn't create files - it provides interactive responses to queries about the processed data.
 
 ---
 
@@ -97,22 +211,41 @@ amlodipine
 
 ---
 
-## Running the Pipeline
+## Running the System
+
+### Batch Processing Pipeline (Agents 1-3)
 
 ```bash
-# Process test data (3 drugs, ~1 minute)
-python scripts/build_atc_database.py --medications data/medications_test.csv
+# Run tests to generate processed data
+pytest tests/test_drug_identifier.py -v
+pytest tests/test_drug_classifier.py -v  
+pytest tests/test_qc_evaluator.py -v
 
-# Process full dataset (123 drugs, ~20 minutes)
-python scripts/build_atc_database.py --medications data/medications_synthetic.csv
+# Or build ATC database from scratch
+python scripts/build_atc_database.py --medications tests/input1/medications_test.csv
 ```
 
 **What happens**:
-1. 🧹 Cleans up intermediate files from previous runs
-2. 🔬 Agent 1 extracts drug names
-3. 🏥 Agent 2 classifies drugs with hybrid WHO + LLM
-4. 💾 Updates `atc_database.json` after each drug
-5. ✅ Shows summary statistics
+1. Agent 1 extracts drug names
+2. Agent 2 classifies to ATC codes with ICD-10 enrichment
+3. Agent 3 validates drug-diagnosis alignment
+4. Output files saved to `tests/tmp/`
+
+### Interactive Analysis (Agent 4)
+
+```bash
+# Run demo
+python scripts/demo_stats_summarizer.py
+
+# Or test interactively
+pytest tests/test_stats_summarizer_session.py -v
+```
+
+**What happens**:
+1. Creates a session with processed data files
+2. Loads data into session memory
+3. Agent answers questions using Code Execution
+4. Multi-turn: Ask follow-up questions that build on previous context
 
 ---
 
@@ -137,7 +270,7 @@ python scripts/build_atc_database.py --medications data/medications_synthetic.cs
 | `direct` | Found directly in WHO database | ✅ High (authoritative) |
 | `pending_llm` | Found via LLM-suggested synonym in WHO but ICD-10 data not yet enriched (placeholder)| ✅ High (WHO-sourced) |
 | `llm_fallback` | Classified by LLM (not in WHO) | ⚠️ Medium (needs verification) |
-| `llm_enriched` | Classified by LLM (not in WHO) | ⚠️ Medium (needs verification) |
+| `llm_enriched` | ICD-10 data filled in by LLM (reliable therapeutic indications) (not in WHO) | ⚠️ Medium (needs verification) |
 | `none` | Unknown drug with no classification data | NA |
 
 
@@ -147,8 +280,24 @@ python scripts/build_atc_database.py --medications data/medications_synthetic.cs
 
 ---
 
+## Two Architectural Patterns
+
+### Pattern 1: InMemoryRunner (Agents 1-3)
+- **Stateless**: Each task is independent
+- **Single-turn**: One input → One output
+- **Efficient**: Perfect for batch processing
+- **Use when**: Predictable, repeatable tasks
+
+### Pattern 2: SessionService (Agent 4)
+- **Stateful**: Maintains conversation history
+- **Multi-turn**: Ask follow-up questions
+- **Interactive**: Exploratory analysis
+- **Use when**: User doesn't know exact query upfront
+- **Data Access**: CSV strings embedded in instruction (BuiltInCodeExecutor cannot access local files)
+- **Components**: `InMemorySessionService` + `Runner` + `BuiltInCodeExecutor`
+
 ## For More Details
 
+- **Coding patterns**: See `docs/GOOGLE_ADK_AGENT_GUIDE.md` (InMemoryRunner & SessionService)
 - **Database structure**: See `docs/ATC_DATABASE_GUIDE.md`
 - **API key setup**: See `docs/GOOGLE_API_KEY_SETUP.md`
-- **Batch processing**: See `docs/BATCH_PROCESSING_GUIDE.md`
