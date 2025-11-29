@@ -1,0 +1,77 @@
+Files to be pushed in version1 branch
+======================================
+
+Total: 48 files
+- 46 Added (A)
+- 2 Modified (M)
+
+MODIFIED FILES (2):
+-------------------
+M       .gitignore
+M       README.md
+
+ADDED FILES (46):
+-----------------
+A       .env.example
+A       agents/__init__.py
+A       agents/drug_classifier.py
+A       agents/drug_extraction_tools.py
+A       agents/drug_identifier.py
+A       agents/file_io_tools.py
+A       agents/qc_evaluator.py
+A       agents/stats_summarizer.py
+A       config.py
+A       data/conditions_synthetic.csv
+A       data/conditions_synthetic_short_8.csv
+A       data/medications_synthetic.csv
+A       data/medications_synthetic_short_8.csv
+A       docs/AGENT_ARCHITECTURE_EXPLAINED.md
+A       docs/ATC_DATABASE_GUIDE.md
+A       docs/GOOGLE_ADK_AGENT_GUIDE.md
+A       docs/GOOGLE_API_KEY_SETUP.md
+A       examples/atc_database.json
+A       examples/drug_classifications.csv
+A       examples/drug_names_extracted_short.csv
+A       examples/example_qc_flags.csv
+A       images/Gemini_ADK_Agents_Image.png
+A       images/Gemini_ADK_Agents_Image_small.png
+A       requirements.txt
+A       scripts/build_atc_database.py
+A       scripts/check_api_key.py
+A       scripts/demo_stats_summarizer.py
+A       tests/baseline_atc_database.json
+A       tests/conftest.py
+A       tests/create_test2_data.py
+A       tests/test1/baseline1/baseline_drug_names_extracted.csv
+A       tests/test1/baseline1/baseline_qc_flags_test.csv
+A       tests/test1/baseline1/baseline_test_atc_database.json
+A       tests/test1/baseline1/baseline_test_drug_classifications.csv
+A       tests/test1/baseline1/baseline_test_drug_names_extracted.csv
+A       tests/test1/input1/conditions_test.csv
+A       tests/test1/input1/medications_test.csv
+A       tests/test2/baseline2/baseline_qc_flags_short_8.csv
+A       tests/test2/input2/conditions_synthetic_short_8.csv
+A       tests/test2/input2/drug_classifications.csv
+A       tests/test2/input2/medications_synthetic_short_8.csv
+A       tests/test_drug_classifier.py
+A       tests/test_drug_identifier.py
+A       tests/test_qc_evaluator.py
+A       tests/test_qc_evaluator_python.py
+A       tests/test_stats_summarizer_session.py
+A       tests/test_who_parse.py
+
+COMMITS TO BE PUSHED (3):
+--------------------------
+557cbea - Completed implementing QC evaluation : test_qc_evaluator_python.py and test_qc_evaluator.py in batch mode. Tested with new input files medications_synthetic_short_8.csv and conditions_synthetic_short_8.csv
+7f6b69e - Fixed all agent files to use Agent orchestration. Fixed the scripts that call the agents
+c76ecdf - feat: Initial version1 - Multi-agent drug-diagnosis QC pipeline with Google ADK
+
+KEY NEW FEATURES:
+-----------------
+✅ Batch processing support (agents/file_io_tools.py)
+✅ QC evaluator with batch mode (agents/qc_evaluator.py)
+✅ Test files for batch processing (test_qc_evaluator.py, test_qc_evaluator_python.py)
+✅ New test dataset: medications_synthetic_short_8.csv (58 medications, 8 patients)
+✅ New test dataset: conditions_synthetic_short_8.csv (171 conditions with SNOMED CT codes)
+✅ Forward slash path support in conftest.py for cross-platform compatibility
+✅ DEFAULT_BATCH_SIZE = 10, TEST_ROW_LIMIT = 20 configuration
