@@ -1,0 +1,88 @@
+{
+  "amlodipine": {
+    "code": "C08CA01",
+    "drug_name": "amlodipine",
+    "who_name": "amlodipine",
+    "drug_class": "Calcium channel blockers, dihydropyridine derivatives",
+    "drug_classcode": "C08CA",
+    "therapeutic_category": "Calcium channel blockers",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Angina pectoris",
+    "icd10_codes": [
+      "I10",
+      "I20.9",
+      "I20.8"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "I20.9": "Angina pectoris, unspecified",
+      "I20.8": "Other forms of angina pectoris"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "I20-I25"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:16:58.803157"
+  },
+  "lisinopril": {
+    "code": "C09AA03",
+    "drug_name": "lisinopril",
+    "who_name": "lisinopril",
+    "drug_class": "ACE inhibitors, plain",
+    "drug_classcode": "C09AA",
+    "therapeutic_category": "Agents acting on the renin-angiotensin system",
+    "anatomical_group": "C",
+    "indication": "Hypertension/Heart Failure/Post-Myocardial Infarction",
+    "icd10_codes": [
+      "I10",
+      "I50.9",
+      "I25.2"
+    ],
+    "icd10_descriptions": {
+      "I10": "Essential (primary) hypertension",
+      "I50.9": "Heart failure, unspecified",
+      "I25.2": "Old myocardial infarction"
+    },
+    "indication_icd10_ranges": [
+      "I10-I15",
+      "I20-I25",
+      "I30-I52"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:17:18.257533"
+  },
+  "penicillin v": {
+    "code": "J01CE02",
+    "drug_name": "Phenoxymethylpenicillin",
+    "who_name": "phenoxymethylpenicillin",
+    "drug_class": "Antiinfectives for systemic use",
+    "drug_classcode": "J01CE",
+    "therapeutic_category": "Antibacterials for systemic use",
+    "anatomical_group": "J",
+    "indication": "Streptococcal pharyngitis/Acute otitis media/Erysipelas/Cellulitis",
+    "icd10_codes": [
+      "J02.0",
+      "H66.9",
+      "A46",
+      "L03.90"
+    ],
+    "icd10_descriptions": {
+      "J02.0": "Streptococcal pharyngitis",
+      "H66.9": "Otitis media, unspecified",
+      "A46": "Erysipelas",
+      "L03.90": "Cellulitis, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "J00-J99",
+      "H60-H95",
+      "L00-L08"
+    ],
+    "icd10_mapping_source": "llm_enriched",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-11-24T17:18:00.551629",
+    "original_name": "penicillin v"
+  }
+}

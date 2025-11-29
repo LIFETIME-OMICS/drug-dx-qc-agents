@@ -1,0 +1,4 @@
+patient_id,encounter_id,drug_name,drug_description,atc_code,drug_class,expected_icd10_codes,expected_icd10_ranges,actual_icd10_codes,status,match_type,matched_codes,reason
+3e77485a-596e-8b53-a9f0-78a5d3b1c861,46f5d44b-e0fe-4e94-8bc3-6415e0dc363d,amlodipine,amLODIPine 2.5 MG Oral Tablet,C08CA01,"Calcium channel blockers, dihydropyridine derivatives",I10; I20.9; I20.8,I10-I15; I20-I25,I10,PASS,exact,['I10'],
+cb84eb7e-cff4-f9d8-ee44-12f43933c9f2,f220ecb2-e86a-443c-8449-a8ab05c3e3e0,lisinopril,lisinopril 10 MG Oral Tablet,C09AA03,"ACE inhibitors, plain",I10; I50.9; I25.2,I10-I15; I20-I25; I30-I52,I10,PASS,exact,['I10'],
+8adc763f-3357-cc4f-f84c-f24e7e0df6ec,c2c59e4a-3964-45a7-b0c6-51b64c4e3bb9,penicillin v,Penicillin V Potassium 250 MG,J01CE02,ATC class J01CE,J02.0; H66.9; A46; L03.90,J00-J99; H60-H95; L00-L08,E11.9,FAIL,none,[],

@@ -1,0 +1,14 @@
+drug_name,atc_code,atc_class,indication,icd10_codes,icd10_mapping_source,source,needs_verification,comment
+cetirizine,R06AE07,Piperazine derivatives,Allergic rhinitis/Urticaria,"J30.1, J30.3, L50.1",llm_knowledge,WHO ATC/DDD Index,False,
+chlorpheniramine,R06AB04,Substituted alkylamines,Allergic rhinitis/Urticaria/Allergic conjunctivitis,"J30.4, L50.0, H10.1",llm_knowledge,WHO ATC/DDD Index,False,
+methadone,N07BC02,Drugs used in opioid dependence,Opioid dependence,"F11.20, F11.21, F11.23",llm_knowledge,WHO ATC/DDD Index,False,
+leucovorin,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,True,
+oxaliplatin,L01XA03,Platinum compounds,Colorectal cancer,"C18.9, C19, C20",llm_knowledge,WHO ATC/DDD Index,False,
+azithromycin,J01FA10,Macrolides,Pneumonia/Acute otitis media/Acute sinusitis/Chlamydia infection,"J18.9, H66.90, J01.90, A74.9",llm_knowledge,WHO ATC/DDD Index,False,
+norinyl +day pack,G03AA05,"Progestogens and estrogens, fixed combinations",Contraception/Menstrual cycle disorders/Dysmenorrhoea,"Z30.011, N92.6, N94.6",llm_knowledge,WHO ATC/DDD Index,False,
+mestranol norethynodrel,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,True,
+kyleena,G03AC03,Progestogens,Contraception/Heavy menstrual bleeding,"Z30.0, N92.0",llm_knowledge,WHO ATC/DDD Index,False,
+furosemide,C03CA01,"Sulfonamides, plain",Edema/Hypertension/Heart failure/Chronic kidney disease,"I50.0, I10, R60.9, N18.9",llm_knowledge,WHO ATC/DDD Index,False,
+oxycodone,N02AA05,Natural opium alkaloids,Moderate to severe pain/Chronic pain,"G89.1, G89.2, G89.4",llm_knowledge,WHO ATC/DDD Index,False,from_cache
+hydrocodone,R05DA03,Opium alkaloids and derivatives,Pain/Cough,"G89.29, R05",llm_knowledge,WHO ATC/DDD Index,False,
+buprenorphine naloxone,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,True,
