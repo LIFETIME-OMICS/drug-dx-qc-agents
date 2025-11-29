@@ -152,39 +152,6 @@ Our drug QC pipeline is a perfect example:
 
 A more dynamic "Root Coordinator" or general `OrchestratorAgent` should be used for **non-linear workflows** where the agent must reason and decide which tool or sub-agent to use next. This is suitable for complex, goal-oriented tasks where the sequence of steps is not predetermined. Since our workflow is fixed, the `SequentialAgent` is the correct and more efficient choice.
 
-#### Implementation Example
-
-The implementation in `agents/drug_dx_qc_agents.py` serves as the reference for this pattern.
-
-```python
-# agents/drug_dx_qc_agents.py
-
-def create_drug_dx_qc_sequential_agent(
-    model: str = "gemini-2.5-flash",
-    atc_db_path: str = None
-) -> adk.SequentialAgent:
-    """Creates a factory that builds and returns the full Drug-Dx QC pipeline."""
-    
-    # This factory creates the sub-agents internally
-    drug_identifier_agent = create_drug_identifier_agent(model=model)
-    drug_classifier_agent = create_drug_classifier_agent(model=model)
-    qc_evaluator_agent = create_qc_evaluator_agent(model=model)
-    
-    # Then, it assembles them into a SequentialAgent
-    root_agent = adk.SequentialAgent(
-        name="drug_dx_qc_sequential_agent",
-        sub_agents=[
-            drug_identifier_agent,
-            drug_classifier_agent,
-            qc_evaluator_agent
-        ],
-    )
-    return root_agent
-```
-
----
-
-By following this 4-step pattern for individual agents and the SequentialAgent pattern for orchestration, we ensure all our agents are consistent, robust, and easy to maintain.
 
 ### The Orchestrator as a "Meta-Agent"
 

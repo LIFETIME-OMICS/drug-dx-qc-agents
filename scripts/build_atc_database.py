@@ -6,7 +6,7 @@ This script runs the 2-agent pipeline to build the ATC database:
 2. Agent 2 (drug_classifier): Classify drugs to ATC codes (WHO + LLM)
 
 Usage:
-    python scripts/build_atc_database2.py --medications data/medications.csv
+    python scripts/build_atc_database.py --medications data/medications.csv
     
 Output:
     - output/atc_database.json: The final ATC database
@@ -34,7 +34,8 @@ from agents.drug_classifier import process_drug_names_file
 def build_atc_database(
     medications_file: str,
     extracted_file: str = '',
-    output_dir: str = "output"
+    output_dir: str = "output",
+    update_mode: str = "none"
 ) -> dict:
     """
     Build ATC database by running the 1 or 2-agent pipeline.
@@ -43,6 +44,10 @@ def build_atc_database(
         medications_file: Path to input medications CSV file
         extracted_file: Path to extracted drug names CSV (if provided, skips extraction)
         output_dir: Directory for all outputs (default: output)
+        update_mode: How to handle existing database entries:
+            - "none": Only add new drugs (default)
+            - "add_unknown": Update entries with unknown fields
+            - "always": Re-fetch all drugs
         
     Returns:
         Dictionary with statistics
@@ -63,8 +68,8 @@ def build_atc_database(
     # Define output files
     extracted_file_temp = extracted_file or f"{output_dir}/drug_names_extracted.csv"
     classified_file = f"{output_dir}/drug_classifications.csv"
-    identifier_log = f"{output_dir}/drug_identifier_errors.log"
-    classifier_log = f"{output_dir}/drug_classifier_errors.log"
+    identifier_log = "logs/drug_identifier_errors.log"
+    classifier_log = "logs/drug_classifier_errors.log"
     
     # Step 1: Run drug_identifier agent (only if no extracted file provided)
     if not extracted_file:
@@ -97,7 +102,8 @@ def build_atc_database(
             input_file=extracted_file_temp,
             output_file=classified_file,
             error_log=classifier_log,
-            model="gemini-2.5-flash"
+            model="gemini-2.5-flash",
+            update=update_mode
         )
         
         successful = len(df_classified[~df_classified['atc_code'].isin(['UNKNOWN', 'ERROR'])])
@@ -107,6 +113,13 @@ def build_atc_database(
         print(f"   - Unknown/Error: {len(df_classified) - successful}")
         print(f"📤 Output: {classified_file}")
         
+    except RuntimeError as e:
+        if 'quota exhausted' in str(e).lower():
+            print(f"\n🛑 Processing stopped: {e}")
+            print(f"\n💡 Partial results saved to: {classified_file}")
+            print("   You can resume processing later once quota resets.")
+            sys.exit(2)  # Exit code 2 for quota exhausted
+        raise
     except Exception as e:
         print(f"\n❌ Error in drug_classifier: {e}")
         raise
@@ -159,6 +172,13 @@ Examples:
         help="Directory for output files (default: output)"
     )
     
+    parser.add_argument(
+        "--update",
+        choices=["none", "add_unknown", "always"],
+        default="none",
+        help="Database update mode: 'none' (add new only), 'add_unknown' (update incomplete), 'always' (re-fetch all)"
+    )
+    
     args = parser.parse_args()
     
     # Must specify either --medications or --from-extracted
@@ -174,14 +194,16 @@ Examples:
             stats = build_atc_database(
                 medications_file='',
                 extracted_file=args.from_extracted,
-                output_dir=args.output_dir
+                output_dir=args.output_dir,
+                update_mode=args.update
             )
         else:
             # Full pipeline
             stats = build_atc_database(
                 medications_file=args.medications,
                 extracted_file='',
-                output_dir=args.output_dir
+                output_dir=args.output_dir,
+                update_mode=args.update
             )
         
         sys.exit(0)

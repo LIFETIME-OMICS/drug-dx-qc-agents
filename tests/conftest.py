@@ -27,6 +27,7 @@ def pytest_addoption(parser):
 
 TEST_DIR = Path(__file__).parent
 
+# TEST 1
 # Test1: Original 3-patient test data with baselines
 INPUT_DIR = TEST_DIR / "test1" / "input1"
 BASELINE_DIR = TEST_DIR / "test1" / "baseline1"
@@ -46,12 +47,39 @@ BASELINE_FILES = {
     'qc_flags_test': BASELINE_DIR / "baseline_qc_flags_test.csv"
 }
 
-# Test2: 10-patient test data (no baselines - tests pipeline execution)
+# TEST 2
+# Test2: 8-patient dataset for pipeline testing with SNOMED CT codes
 INPUT_DIR_TEST2 = TEST_DIR / "test2" / "input2"
+BASELINE_DIR_TEST2 = TEST_DIR / "test2" / "baseline2"
+TMP_DIR_TEST = TEST_DIR / "tmp"
+
 TEST_INPUT_FILES_TEST2 = {
-    'medications': INPUT_DIR_TEST2 / "medications_test.csv",
-    'conditions': INPUT_DIR_TEST2 / "conditions_test.csv"
+    'medications': INPUT_DIR_TEST2 / "medications_synthetic_short_8.csv",
+    'conditions': INPUT_DIR_TEST2 / "conditions_synthetic_short_8.csv",
+    'drug_classifications': INPUT_DIR_TEST2 / "drug_classifications.csv"
 }
+
+BASELINE_FILES_TEST2 = {
+    'qc_flags': BASELINE_DIR_TEST2 / "baseline_qc_flags_short_8.csv"
+}
+
+# Test output file paths
+TEST_OUTPUT_FILES = {
+    'qc_flags_agent_orchestration': TMP_DIR_TEST / "qc_flags_agent_orchestration.csv",
+    'qc_flags_test': TMP_DIR_TEST / "qc_flags_test.csv"
+}
+
+# Batch processing configuration (for test_qc_evaluator2.py batch tests)
+DEFAULT_BATCH_SIZE = 10
+TEST_ROW_LIMIT = 20  # For testing batch processing with limited rows
+
+# Legacy string paths for backward compatibility (using forward slashes for cross-platform compatibility)
+TEST2_MEDICATIONS_FILE = TEST_INPUT_FILES_TEST2['medications'].as_posix()
+TEST2_CONDITIONS_FILE = TEST_INPUT_FILES_TEST2['conditions'].as_posix()
+TEST2_DRUG_CLASSIFICATIONS_FILE = TEST_INPUT_FILES_TEST2['drug_classifications'].as_posix()
+TEST2_BASELINE_QC_FLAGS = BASELINE_FILES_TEST2['qc_flags'].as_posix()
+TEST_QC_FLAGS_AGENT_ORCHESTRATION = TEST_OUTPUT_FILES['qc_flags_agent_orchestration'].as_posix()
+TEST_QC_FLAGS = TEST_OUTPUT_FILES['qc_flags_test'].as_posix()
 
 
 @pytest.fixture

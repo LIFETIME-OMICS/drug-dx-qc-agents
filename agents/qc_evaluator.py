@@ -29,12 +29,16 @@ import logging
 from typing import List, Dict, Optional
 from datetime import datetime
 from pathlib import Path
+from dotenv import load_dotenv
 from google.adk import Agent
 from google.adk.tools import FunctionTool
 from google.adk.models import Gemini
 from google.adk.runners import InMemoryRunner
 from .drug_extraction_tools import extract_drug_name_regex
-from .file_io_tools import read_csv_file, write_csv_file, write_dataframe_to_csv
+from .file_io_tools import read_csv_file, write_csv_file, write_dataframe_to_csv, get_csv_info, read_csv_batch
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Add project root to path for config import
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -236,44 +240,236 @@ def create_qc_evaluator_agent(model: str = "gemini-2.5-flash") -> Agent:
     write_csv_tool = FunctionTool(write_csv_file)
     write_df_tool = FunctionTool(write_dataframe_to_csv)
     
+    # Batch reading tools (for large files)
+    get_csv_info_tool = FunctionTool(get_csv_info)
+    read_csv_batch_tool = FunctionTool(read_csv_batch)
+    
     # Create agent with tools and instruction
     agent = Agent(
         model=model,
         name="qc_evaluator",
         tools=[
-            check_diagnosis_tool,
             read_csv_tool,
             write_csv_tool,
-            write_df_tool
+            write_df_tool,
+            get_csv_info_tool,
+            read_csv_batch_tool
         ],
         instruction="""
 You are a clinical QC evaluator specializing in medication-diagnosis alignment.
 
-Your task is to assess whether prescribed medications are clinically appropriate
-for a patient's diagnosed conditions by:
-1. Reading the drug classifications CSV (output from drug_classifier agent) which contains:
-   - drug_name, atc_code, atc_class, indication, icd10_codes (expected diagnoses)
-2. Reading the patient conditions CSV which contains actual ICD-10 diagnoses
-3. For each medication, checking if the patient's actual diagnoses match the drug's expected ICD-10 codes
-4. Using check_diagnosis_match_tool_wrapper() to validate matches
-   - This tool handles both exact code matches AND range matches automatically
+You will perform an independent quality control evaluation using your expert medical knowledge, 
+WITHOUT relying on results from other agents or pre-classified drug databases.
 
-File I/O Operations:
-- Use read_csv_file() to read drug classifications and conditions CSV files
-- Use write_csv_file() to write output CSV (provide CSV-formatted string)
-- Use write_dataframe_to_csv() to write output from dictionary format
+Your task is to assess whether prescribed medications are clinically appropriate for a patient's 
+diagnosed conditions by:
+
+1. **Reading the medications CSV** and identifying columns with:
+   - Patient identifier
+   - Encounter identifier
+   - Drug information (name, description)
+   - Reason for visit (if available)
+   - Patient diagnosis (if available)
+
+2. **For each medication**, use your expert reasoning to:
+   - Map the medication to WHO ATC codes (or synonym ATC codes if no exact match)
+   - Determine expected ICD-10 codes and descriptions for the drug's typical indications
+   - Use your medical knowledge of pharmacology and clinical practice
+
+3. **Reading the conditions CSV** (if available) and:
+   - Find matching patient and encounter records
+   - Identify columns containing reasons for visit
+   - Extract actual patient diagnoses
+
+4. **Evaluate medication-diagnosis alignment** by comparing:
+   - Expected diagnoses (from your medical knowledge of the drug)
+   - Actual diagnoses (from patients' files)
+
+5. **Write evaluation results** to CSV with these columns IN THIS EXACT ORDER:
+   patient_id, encounter_id, drug_name, drug_description, atc_code, drug_class, 
+   expected_icd10_codes, expected_icd10_ranges, actual_icd10_codes, status, match_type, 
+   matched_codes, reason
+
+**CRITICAL: Maintain this exact column order when writing the CSV file.**
+
+**Output Format Example:**
+```csv
+patient_id,encounter_id,drug_name,drug_description,atc_code,drug_class,expected_icd10_codes,expected_icd10_ranges,actual_icd10_codes,status,match_type,matched_codes,reason
+P1,E1,amlodipine,amLODIPine 2.5 MG Oral Tablet,C08CA01,"Calcium channel blockers, dihydropyridine derivatives",I10; I20.9,I10-I15; I20-I25,I10,PASS,exact,"['I10']",Patient has hypertension (I10) which is primary indication for amlodipine
+P2,E20,lisinopril,lisinopril 10 MG Oral Tablet,C09AA03,"ACE inhibitors, plain",I10; I50.9,I10-I15; I30-I52,I10,PASS,exact,"['I10']",ACE inhibitor appropriately prescribed for hypertension
+P3,E99,penicillin v,Penicillin V Potassium 250 MG,J01CE02,Beta-lactam antibacterials,J02.0; H66.9; A46,J00-J99; H60-H95,E11.9,FAIL,none,"[]",Antibiotic prescribed but patient only has diabetes diagnosis - infection indication missing
+```
+
+**Status Values:**
+- **'PASS'** if patient's reported diagnoses match expected diagnoses:
+  - match_type = 'exact': exact ICD-10 code match found
+  - match_type = 'range': diagnosis matches expected range for the drug class
+- **'FAIL'** if patient's reported diagnoses do NOT match expected diagnoses:
+  - match_type = 'fail': no matching diagnosis found
+- **'UNKNOWN_DRUG'** if unable to classify the medication
+
+**Clinical Reasoning Requirements:**
+In the "reason" column, provide detailed explanation including:
+- Why you mapped the drug to specific ATC codes
+- What diagnoses you expect for this medication based on pharmacology
+- Whether actual diagnoses align with expected clinical use
+- Any clinical concerns, contraindications, or red flags
+- For FAIL status: explain the mismatch and potential safety concerns
+
+File I/O Operations - Two Modes Available:
+
+**Small Files or Preview Mode (Quick):**
+- Use read_csv_file() - reads and shows first 5 rows
+- Process the preview data
+- Use write_dataframe_to_csv() to write results
+
+**Large Files or Batch Mode (Complete):**
+1. Use get_csv_info() to check total rows in medications file
+2. Calculate batches needed: total_rows / batch_size (use batch_size=10)
+3. Loop through batches:
+   - Call read_csv_batch(medications_file, start_row=N, batch_size=10)
+   - Process the 10 medications in this batch
+   - After each batch, print progress: "Processed batch X: rows N to N+9 (Y% complete)"
+   - Accumulate results in your dictionary
+   - Increment start_row by batch_size
+4. After all batches, call write_dataframe_to_csv() once with all results
+5. Columns will be automatically reordered to standard format
+
+**Batch Processing Example:**
+- File has 58 rows, batch_size=10
+- Batch 0: rows 0-9 (17% complete)
+- Batch 1: rows 10-19 (34% complete)
+- Batch 2: rows 20-29 (52% complete)
+- Batch 3: rows 30-39 (69% complete)
+- Batch 4: rows 40-49 (86% complete)
+- Batch 5: rows 50-57 (100% complete)
+- Write all results at once
+
+For conditions file: Read once with read_csv_file() or get_csv_info() + read_csv_batch() if too large.
 
 Input files you'll receive:
-- Drug classifications CSV: contains drug_name, atc_code, atc_class, indication, icd10_codes
-- Patient conditions CSV: contains patient, encounter, code (ICD-10 diagnoses)
+- Medications CSV (patient medication records)
+- Patient conditions CSV (patient diagnoses)
 
-Use check_diagnosis_match_tool_wrapper() for all diagnosis validation - it handles both exact matches and range checking.
-Provide clear PASS/FAIL assessments with clinical reasoning.
+Apply your deep medical knowledge of pharmacology, disease indications, and clinical practice 
+to provide thorough, evidence-based quality control evaluation.
 """,
         output_key="qc_flags"
     )
     
     return agent
+
+
+# ============================================================================
+# SNOMED CT TO ICD-10 MAPPING
+# ============================================================================
+
+def map_snomed_to_icd10(
+    medication_data: Dict[str, tuple],
+    condition_data: Dict[str, tuple],
+    model: str = "gemini-2.5-flash"
+) -> List[str]:
+    """
+    Map SNOMED CT codes to ICD-10 codes using Gemini API.
+    
+    This function takes SNOMED CT codes paired with their descriptions from 
+    medications and conditions files and maps them to ICD-10 diagnosis codes.
+    
+    Args:
+        medication_data: Dict with paired (code, description) tuples:
+            - 'reason': (reasoncode, reasondescription)
+            - 'encounter.reason': (encounter.reasoncode, encounter.reasondescription)
+        condition_data: Dict with paired (code, description) tuples:
+            - 'condition': (code, description)
+            - 'encounter.reason': (encounter.reasoncode, encounter.reasondescription)
+        model: Gemini model to use
+        
+    Returns:
+        List of ICD-10 codes mapped from SNOMED CT codes
+    """
+    # Filter out empty/None/0 values
+    def is_valid_value(value) -> bool:
+        if value is None or value == '' or value == 0 or value == '0':
+            return False
+        if pd.isna(value):
+            return False
+        return True
+    
+    # Collect all valid code-description pairs
+    code_pairs = []
+    
+    for key, (code, description) in medication_data.items():
+        if is_valid_value(code) or is_valid_value(description):
+            code_str = str(code) if is_valid_value(code) else "N/A"
+            desc_str = str(description) if is_valid_value(description) else "N/A"
+            code_pairs.append(f"Medication {key}: Code={code_str}, Description={desc_str}")
+    
+    for key, (code, description) in condition_data.items():
+        if is_valid_value(code) or is_valid_value(description):
+            code_str = str(code) if is_valid_value(code) else "N/A"
+            desc_str = str(description) if is_valid_value(description) else "N/A"
+            code_pairs.append(f"Condition {key}: Code={code_str}, Description={desc_str}")
+    
+    # If no valid data, return empty list
+    if not code_pairs:
+        return []
+    
+    # Build prompt for LLM
+    pairs_text = "\n".join(code_pairs)
+    prompt = f"""You are a medical coding expert specializing in SNOMED CT to ICD-10 mapping.
+
+You are given clinical codes (likely SNOMED CT) paired with their descriptions. Map these to the appropriate ICD-10 diagnosis codes.
+
+Clinical code-description pairs:
+{pairs_text}
+
+Analyze both the codes and descriptions to identify the diagnoses, then return the corresponding ICD-10 codes.
+
+Return ONLY a JSON array of ICD-10 codes (e.g., ["I10", "E11.9", "J44.0"]).
+Include all relevant ICD-10 codes that match the described conditions.
+If no clear diagnosis can be mapped, return an empty array [].
+
+Response format: ["CODE1", "CODE2", ...]"""
+    
+    try:
+        # Call Gemini API
+        import google.genai as genai
+        api_key = os.getenv('GOOGLE_API_KEY')
+        if not api_key:
+            logger.warning("No GOOGLE_API_KEY found, skipping LLM enrichment")
+            return []
+        
+        client = genai.Client(api_key=api_key)
+        response = client.models.generate_content(
+            model=model,
+            contents=prompt
+        )
+        
+        # Parse JSON response
+        response_text = response.text.strip()
+        
+        # Extract JSON from response (may have markdown code blocks)
+        if response_text.startswith("```"):
+            # Remove markdown code blocks
+            lines = response_text.split('\n')
+            response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
+            response_text = response_text.strip()
+        
+        # Parse JSON
+        icd10_codes = json.loads(response_text)
+        
+        if isinstance(icd10_codes, list):
+            # Filter to valid ICD-10 format
+            valid_codes = [code for code in icd10_codes if isinstance(code, str) and len(code) >= 3]
+            logger.debug(f"Extracted {len(valid_codes)} ICD-10 codes from text descriptions")
+            return valid_codes
+        else:
+            logger.warning(f"Unexpected response format: {type(icd10_codes)}")
+            return []
+            
+    except Exception as e:
+        logger.warning(f"Error extracting ICD-10 from text: {e}")
+        return []
 
 
 # ============================================================================
@@ -309,6 +505,10 @@ def evaluate_medications(
     conditions_df = pd.read_csv(conditions_file)
     classifications_df = pd.read_csv(drug_classifications_file)
     
+    # Normalize column names to lowercase for consistency
+    medications_df.columns = medications_df.columns.str.lower()
+    conditions_df.columns = conditions_df.columns.str.lower()
+    
     # Convert classifications to dictionary for fast lookup
     drug_lookup = {}
     for _, row in classifications_df.iterrows():
@@ -343,9 +543,9 @@ def evaluate_medications(
     
     # Process each medication record
     for idx, med_row in medications_df.iterrows():
-        patient_id = med_row['PATIENT']
-        encounter_id = med_row['ENCOUNTER']
-        drug_description = med_row['DESCRIPTION']
+        patient_id = med_row['patient']
+        encounter_id = med_row['encounter']
+        drug_description = med_row['description']
         
         # Extract drug name
         drug_name = extract_drug_name_regex(drug_description)
@@ -366,7 +566,8 @@ def evaluate_medications(
                 'actual_icd10_codes': '',
                 'status': 'UNKNOWN_DRUG',
                 'match_type': 'none',
-                'matched_codes': ''
+                'matched_codes': '',
+                'reason': ''  # Empty reason column
             })
             continue
         
@@ -380,7 +581,39 @@ def evaluate_medications(
             (conditions_df['encounter'] == encounter_id)
         ]
         
-        actual_codes = encounter_conditions['code'].tolist()
+        # Map SNOMED CT codes to ICD-10 using LLM
+        # Collect medication SNOMED code-description pairs
+        med_data = {
+            'reason': (
+                med_row.get('reasoncode', ''),
+                med_row.get('reasondescription', '')
+            ),
+            'encounter.reason': (
+                med_row.get('encounter.reasoncode', ''),
+                med_row.get('encounter.reasondescription', '')
+            )
+        }
+        
+        # Collect condition SNOMED code-description pairs
+        cond_data = {}
+        if not encounter_conditions.empty:
+            first_cond = encounter_conditions.iloc[0]
+            cond_data = {
+                'condition': (
+                    first_cond.get('code', ''),
+                    first_cond.get('description', '')
+                ),
+                'encounter.reason': (
+                    first_cond.get('encounter.reasoncode', ''),
+                    first_cond.get('encounter.reasondescription', '')
+                )
+            }
+        
+        # Map SNOMED CT to ICD-10 codes using LLM
+        actual_codes = map_snomed_to_icd10(med_data, cond_data)
+        
+        if actual_codes:
+            logger.info(f"    📝 Mapped {len(actual_codes)} ICD-10 codes from SNOMED: {actual_codes}")
         
         # Check for match using core tool function
         match_result = check_diagnosis_match_tool(
@@ -402,7 +635,8 @@ def evaluate_medications(
             'actual_icd10_codes': '; '.join(actual_codes) if actual_codes else 'NONE',
             'status': match_result['status'],
             'match_type': match_result['match_type'],
-            'matched_codes': str(match_result['matched_codes'])
+            'matched_codes': str(match_result['matched_codes']),
+            'reason': ''  # Empty reason column (no AI reasoning in evaluate_medications)
         })
     
     # Create DataFrame

@@ -51,6 +51,61 @@ def save_atc_database(atc_database: Dict, db_path: str = ATC_DATABASE_PATH) -> N
         json.dump(atc_database, f, indent=2, ensure_ascii=False)
 
 
+def check_drug_in_database(drug_name: str, db_path: str = ATC_DATABASE_PATH) -> Dict:
+    """
+    Check if drug exists in database and analyze its completeness.
+    
+    Args:
+        drug_name: Name of drug to check
+        db_path: Path to ATC database
+        
+    Returns:
+        Dict with:
+        - exists: bool - whether drug exists in database
+        - has_unknowns: bool - whether entry contains 'unknown' fields
+        - unknown_fields: list - names of fields with 'unknown' values
+        - entry: dict - the database entry (if exists)
+    """
+    atc_db = load_atc_database(db_path)
+    entry = atc_db.get(drug_name.lower())
+    
+    if not entry:
+        return {
+            'exists': False,
+            'has_unknowns': False,
+            'unknown_fields': [],
+            'entry': None
+        }
+    
+    # Check for unknown/empty fields that indicate incomplete data
+    unknown_fields = []
+    fields_to_check = [
+        'drug_class', 'therapeutic_category', 'indication',
+        'icd10_codes', 'icd10_descriptions'
+    ]
+    
+    for field in fields_to_check:
+        value = entry.get(field, '')
+        # Check for various forms of "unknown"
+        if isinstance(value, str):
+            if value.lower() in ['unknown', '', 'not found']:
+                unknown_fields.append(field)
+        elif isinstance(value, (list, dict)):
+            if not value:  # Empty list or dict
+                unknown_fields.append(field)
+    
+    # Also check if code is UNKNOWN or ERROR
+    if entry.get('code', '') in ['UNKNOWN', 'ERROR']:
+        unknown_fields.append('code')
+    
+    return {
+        'exists': True,
+        'has_unknowns': len(unknown_fields) > 0,
+        'unknown_fields': unknown_fields,
+        'entry': entry
+    }
+
+
 # ============================================================================
 # WHO ATC LOOKUP FUNCTIONS
 # ============================================================================
@@ -449,11 +504,52 @@ def _build_not_found(drug_name: str) -> Dict:
 # BATCH PROCESSING
 # ============================================================================
 
+def decide_atc_database_process(drug_name: str, update: str, db_status: Dict) -> tuple[bool, str]:
+    """
+    Decide whether to process a drug based on update mode and database status.
+    
+    Args:
+        drug_name: Name of drug to check
+        update: Update mode ('none', 'add_unknown', 'always')
+        db_status: Dictionary returned from check_drug_in_database
+        
+    Returns:
+        Tuple of (should_process: bool, skip_reason: str)
+    """
+    should_process = False
+    skip_reason = ""
+    
+    if update == "none":
+        # Only process if drug doesn't exist
+        should_process = not db_status['exists']
+        skip_reason = "already in database" if db_status['exists'] else ""
+        
+    elif update == "add_unknown":
+        # Process if drug doesn't exist OR has unknown fields
+        should_process = (not db_status['exists']) or db_status['has_unknowns']
+        if db_status['exists'] and not db_status['has_unknowns']:
+            skip_reason = "complete entry exists"
+        elif db_status['exists'] and db_status['has_unknowns']:
+            logger.info(f"    ♻️  Updating incomplete entry (unknown fields: {', '.join(db_status['unknown_fields'])})")
+        
+    elif update == "always":
+        # Always process
+        should_process = True
+        if db_status['exists']:
+            logger.info(f"    ♻️  Re-fetching (update mode: always)")
+    
+    else:
+        raise ValueError(f"Invalid update mode: {update}. Must be 'none', 'add_unknown', or 'always'")
+    
+    return should_process, skip_reason
+
+
 def process_drug_names_file(
     input_file: str,
     output_file: str,
     error_log: str = "logs/drug_classifier_errors.log",
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini-2.5-flash",
+    update: str = "none"
 ) -> pd.DataFrame:
     """
     Process drug names file and classify all drugs using optimized pattern.
@@ -469,6 +565,10 @@ def process_drug_names_file(
         output_file: Path for output CSV
         error_log: Path for error log
         model: Gemini model to use
+        update: Update mode for existing database entries:
+            - "none" (default): Only add new drugs, skip existing ones
+            - "add_unknown": Update entries that have 'unknown' fields
+            - "always": Always update/re-fetch all drugs
         
     Returns:
         DataFrame with classification results
@@ -478,9 +578,12 @@ def process_drug_names_file(
     logger.info("="*70)
     logger.info(f"📥 Input: {input_file}")
     logger.info(f"📤 Output: {output_file}")
+    logger.info(f"🔄 Update mode: {update}")
     
     df = pd.read_csv(input_file)
-    logger.info(f"📊 Processing {len(df)} drugs")
+    logger.info(f"📊 Before starting the process {len(df)} drugs with duplicates")
+    df = df.drop_duplicates(subset=['drug_name'])
+    logger.info(f"📊 Processing {len(df)} drugs after removing duplicates")
     
     results = []
     errors = []
@@ -496,7 +599,32 @@ def process_drug_names_file(
             try:
                 logger.info(f"[{idx+1}/{len(df)}] 🔬 {drug_name}")
                 
-                # MAIN ENTRY POINT
+                # Check database status and decide whether to process
+                db_status = check_drug_in_database(drug_name, ATC_DATABASE_PATH)
+                should_process, skip_reason = decide_atc_database_process(drug_name, update, db_status)
+                
+                # Skip if not processing
+                if not should_process:
+                    logger.info(f"    ⏭️  Skipping: {skip_reason}")
+                    cache_hits += 1
+                    
+                    # Use existing entry for output
+                    existing = db_status['entry']
+                    output_row = {
+                        'drug_name': drug_name,
+                        'atc_code': existing['code'],
+                        'atc_class': existing['drug_class'],
+                        'indication': existing['indication'],
+                        'icd10_codes': ', '.join(existing['icd10_codes']) if isinstance(existing['icd10_codes'], list) else existing['icd10_codes'],
+                        'icd10_mapping_source': existing.get('icd10_mapping_source', ''),
+                        'source': existing['source'],
+                        'needs_verification': existing['code'] in ['UNKNOWN', 'ERROR'],
+                        'comment': 'from_local_ATC_database'
+                    }
+                    results.append(output_row)
+                    continue
+                
+                # MAIN ENTRY POINT - Process the drug
                 result = await classify_drug(
                     drug_name=drug_name,
                     atc_db_path=ATC_DATABASE_PATH,
@@ -527,8 +655,21 @@ def process_drug_names_file(
                 results.append(output_row)
                 
             except Exception as e:
-                logger.error(f"    ❌ Error: {e}")
-                errors.append(f"{drug_name}: {str(e)}")
+                error_msg = str(e)
+                logger.error(f"    ❌ Error: {error_msg}")
+                
+                # Check for quota exhausted error and abort
+                if '429' in error_msg and 'RESOURCE_EXHAUSTED' in error_msg:
+                    logger.error("\n" + "="*70)
+                    logger.error("🛑 QUOTA EXHAUSTED - Aborting processing")
+                    logger.error("="*70)
+                    logger.error("Gemini API quota exceeded. Please check:")
+                    logger.error("  - https://ai.google.dev/gemini-api/docs/rate-limits")
+                    logger.error("  - https://ai.dev/usage?tab=rate-limit")
+                    logger.error(f"\n⏸️  Processed {idx + 1}/{len(df)} drugs before quota exhausted")
+                    raise RuntimeError(f"API quota exhausted after processing {idx + 1} drugs") from e
+                
+                errors.append(f"{drug_name}: {error_msg}")
                 results.append({
                     'drug_name': drug_name,
                     'atc_code': 'ERROR',
@@ -538,7 +679,7 @@ def process_drug_names_file(
                     'icd10_mapping_source': '',
                     'source': 'ERROR',
                     'needs_verification': True,
-                    'comment': str(e)
+                    'comment': error_msg
                 })
     
     asyncio.run(process_all())
@@ -561,8 +702,8 @@ def process_drug_names_file(
     
     logger.info("="*70)
     logger.info(f"✅ Success: {successful} | ⚠️  Unknown: {unknown} | ❌ Errors: {error_count}")
-    logger.info(f"💰 Cost Optimization:")
-    logger.info(f"   Cache hits: {cache_hits} (0 agent calls)")
+    logger.info(f"💰 Cost Optimization (update mode: {update}):")
+    logger.info(f"   Cache hits/skipped: {cache_hits} (0 agent calls)")
     logger.info(f"   WHO hits: {who_hits} (1 agent call each)")
     logger.info(f"   Total agent calls: {agent_calls}")
     logger.info(f"📤 Output: {output_file}")

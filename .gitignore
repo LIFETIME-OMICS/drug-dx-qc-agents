@@ -213,13 +213,14 @@ __marimo__/
 # - cache/    = runtime caches (ignored)
 # - logs/     = error/debug logs (ignored)
 
-# Output folder (keep final database)
+# Output folder (runtime outputs - user-generated, not tracked)
 output/
-!output/atc_database.json
+!output/.gitkeep
 
 # Temporary/intermediate files (auto-cleaned by pipeline)
 tmp/
 temp/
+tests/tmp/
 
 # Cache folder (runtime caches)
 cache/

@@ -90,6 +90,7 @@ def write_dataframe_to_csv(file_path: str, dataframe_dict: Dict[str, Any]) -> st
     Write a dictionary representation of a DataFrame to a CSV file.
     
     This is a helper for agents that construct data programmatically.
+    For QC evaluator output, automatically enforces the correct column order.
     
     Args:
         file_path: Path where the CSV file should be written
@@ -113,6 +114,20 @@ def write_dataframe_to_csv(file_path: str, dataframe_dict: Dict[str, Any]) -> st
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
         
         df = pd.DataFrame(dataframe_dict)
+        
+        # If this looks like QC evaluator output, enforce correct column order
+        expected_qc_columns = [
+            'patient_id', 'encounter_id', 'drug_name', 'drug_description', 
+            'atc_code', 'drug_class', 'expected_icd10_codes', 'expected_icd10_ranges', 
+            'actual_icd10_codes', 'status', 'match_type', 'matched_codes', 'reason'
+        ]
+        
+        # Check if this DataFrame has the QC evaluator columns
+        if all(col in df.columns for col in expected_qc_columns):
+            # Reorder columns to match expected order
+            df = df[expected_qc_columns]
+            logger.info(f"Reordered QC evaluator columns to standard format")
+        
         df.to_csv(file_path, index=False)
         
         success_msg = f"Successfully wrote {len(df)} rows to {file_path}"
@@ -121,6 +136,97 @@ def write_dataframe_to_csv(file_path: str, dataframe_dict: Dict[str, Any]) -> st
         
     except Exception as e:
         error_msg = f"ERROR writing to {file_path}: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+def get_csv_info(file_path: str) -> str:
+    """
+    Get metadata about a CSV file without loading all data.
+    
+    This is useful for agents to understand file structure before processing.
+    
+    Args:
+        file_path: Path to the CSV file to inspect
+        
+    Returns:
+        String with file metadata (row count, column count, column names)
+        
+    Example:
+        info = get_csv_info("data/medications.csv")
+        # Output: "File: data/medications.csv\nTotal rows: 58\nTotal columns: 13\nColumns: patient, encounter, description, ..."
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"ERROR: File not found: {file_path}"
+        
+        df = pd.read_csv(file_path)
+        
+        result = f"File: {file_path}\n"
+        result += f"Total rows: {len(df)}\n"
+        result += f"Total columns: {len(df.columns)}\n"
+        result += f"Columns: {', '.join(df.columns.tolist())}"
+        
+        logger.info(f"Got CSV info: {file_path} ({len(df)} rows, {len(df.columns)} columns)")
+        return result
+        
+    except Exception as e:
+        error_msg = f"ERROR getting info for {file_path}: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+def read_csv_batch(file_path: str, start_row: int, batch_size: int = 10) -> str:
+    """
+    Read a specific batch of rows from a CSV file.
+    
+    This allows agents to process large CSV files in manageable chunks.
+    
+    Args:
+        file_path: Path to the CSV file to read
+        start_row: Starting row index (0-based)
+        batch_size: Number of rows to read (default: 10)
+        
+    Returns:
+        String representation of the batch with metadata
+        
+    Example:
+        batch = read_csv_batch("data/medications.csv", start_row=0, batch_size=10)
+        # Returns rows 0-9
+        
+        batch = read_csv_batch("data/medications.csv", start_row=10, batch_size=10)
+        # Returns rows 10-19
+    """
+    try:
+        if not os.path.exists(file_path):
+            return f"ERROR: File not found: {file_path}"
+        
+        df = pd.read_csv(file_path)
+        total_rows = len(df)
+        
+        # Handle edge cases
+        if start_row >= total_rows:
+            return f"ERROR: start_row ({start_row}) is beyond file length ({total_rows} rows)"
+        
+        # Calculate end row
+        end_row = min(start_row + batch_size, total_rows)
+        
+        # Get batch
+        batch_df = df.iloc[start_row:end_row]
+        
+        # Format result
+        result = f"Successfully read batch from {file_path}\n"
+        result += f"Batch: rows {start_row} to {end_row-1} (of {total_rows} total rows)\n"
+        result += f"Rows in this batch: {len(batch_df)}\n"
+        result += f"Columns: {', '.join(batch_df.columns.tolist())}\n\n"
+        result += "Batch data:\n"
+        result += batch_df.to_string()
+        
+        logger.info(f"Read CSV batch: {file_path} rows {start_row}-{end_row-1}")
+        return result
+        
+    except Exception as e:
+        error_msg = f"ERROR reading batch from {file_path}: {str(e)}"
         logger.error(error_msg)
         return error_msg
 

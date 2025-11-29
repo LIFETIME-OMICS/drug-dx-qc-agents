@@ -1,86 +1,483 @@
 """
-Unit tests for QC Evaluator Agent.
+Test QC Evaluator Agent using Agent Orchestration (Prompt-Based)
 
-Tests the QC evaluation of medication-diagnosis alignment.
+This test uses the Agent Orchestration pattern where the LLM decides
+when to call file I/O tools based on natural language prompts.
+
+Contrasts with test_qc_evaluator.py which uses Python Orchestration
+(calling evaluate_medications() function directly).
 """
 
 import pytest
+import asyncio
 import sys
-from pathlib import Path
+import os
 import pandas as pd
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env file for API key
+load_dotenv()
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from agents.qc_evaluator import create_qc_evaluator_agent, evaluate_qc
-from config import OUTPUT_DIR
+from agents.qc_evaluator import create_qc_evaluator_agent
+from google.adk.runners import InMemoryRunner
+from conftest import (TEST2_MEDICATIONS_FILE, TEST2_CONDITIONS_FILE, TEST2_DRUG_CLASSIFICATIONS_FILE, 
+                      TEST2_BASELINE_QC_FLAGS, TEST_QC_FLAGS_AGENT_ORCHESTRATION, 
+                      DEFAULT_BATCH_SIZE, TEST_ROW_LIMIT)
 
 
-class TestQCEvaluator:
-    """Test QC Evaluator Agent functionality."""
+# Fixture to check for API key
+@pytest.fixture(scope="session")
+def api_key_available():
+    """Check if GOOGLE_API_KEY is available."""
+    api_key = os.getenv('GOOGLE_API_KEY')
+    if not api_key:
+        pytest.skip("GOOGLE_API_KEY not found. Set it in .env file or environment variable.")
+    return api_key
+
+
+class TestQcEvaluatorAgentOrchestration:
+    """Test QC Evaluator using Agent Orchestration (prompt-based file I/O)."""
     
-    def test_qc_evaluator_creation(self):
-        """Test that QC Evaluator agent creation function works."""
-        agent = create_qc_evaluator_agent()
+    def test_agent_creation_with_file_tools(self):
+        """Verify agent has file I/O tools including batch processing tools."""
+        agent = create_qc_evaluator_agent(model="gemini-2.5-flash")
         
+        # Verify agent exists
         assert agent is not None
         assert agent.name == "qc_evaluator"
         
-        print("✅ QC Evaluator agent created successfully")
+        # Verify tools are present (should have 5 file I/O tools)
+        assert hasattr(agent, 'tools')
+        assert len(agent.tools) == 5, f"Expected 5 tools (read_csv, write_csv, write_dataframe, get_csv_info, read_csv_batch), got {len(agent.tools)}"
+        
+        # Verify agent has instruction for independent QC evaluation
+        assert hasattr(agent, 'instruction')
+        instruction_lower = agent.instruction.lower()
+        assert 'clinical qc evaluator' in instruction_lower
+        assert 'independent quality control' in instruction_lower
+        assert 'expert medical knowledge' in instruction_lower
+        assert 'batch' in instruction_lower, "Instruction should mention batch processing"
+        
+        print(f"✅ Agent created with {len(agent.tools)} file I/O tools")
+        print(f"   - read_csv_file, write_csv_file, write_dataframe_to_csv")
+        print(f"   - get_csv_info, read_csv_batch (for batch processing)")
+        print(f"✅ Agent configured for independent medical QC evaluation with batch support")
     
-    def test_evaluate_test_medications(self, test_input_files):
+    def test_qc_evaluation_via_prompt(self, api_key_available):
         """
-        Test QC evaluation with test data files.
+        Test QC evaluation using Agent Orchestration pattern with test2 data.
         
-        Expected results:
-        - Patient 1: amlodipine for hypertension (I10) → PASS ✓
-        - Patient 2: lisinopril for hypertension (I10) → PASS ✓
-        - Patient 3: Penicillin V for diabetes (E11.9) → FAIL ✗
+        Uses 8-patient dataset with SNOMED CT codes that need to be mapped to ICD-10.
+        The agent receives a natural language prompt with:
+        - Input file paths (classifications and conditions)
+        - Output file path
+        - Task description
+        
+        The LLM decides when to call file I/O tools and performs SNOMED CT to ICD-10 mapping.
+        
+        This test generates: tests/tmp/qc_flags_agent_orchestration.csv
         """
         
-        medications_file = str(test_input_files['medications'])
-        conditions_file = str(test_input_files['conditions'])
-        drug_classifications_file = str(OUTPUT_DIR / "drug_classifications.csv")
-        output_file = "tests/tmp/qc_flags_test.csv"
+        async def run_test():
+            # Use test2 data (8-patient dataset with SNOMED CT codes)
+            medications_file = TEST2_MEDICATIONS_FILE
+            conditions_file = TEST2_CONDITIONS_FILE
+            classifications_file = TEST2_DRUG_CLASSIFICATIONS_FILE
+            
+            # Verify inputs exist
+            if not os.path.exists(medications_file):
+                pytest.skip(f"Medications file not found: {medications_file}")
+            if not os.path.exists(conditions_file):
+                pytest.skip(f"Conditions file not found: {conditions_file}")
+            if not os.path.exists(classifications_file):
+                pytest.skip(f"Drug classifications not found: {classifications_file}\nRun test_drug_classifier2.py first!")
+            
+            # Define output file
+            output_file = TEST_QC_FLAGS_AGENT_ORCHESTRATION
+            
+            # Clean output
+            if os.path.exists(output_file):
+                os.remove(output_file)
+            
+            # Create agent
+            agent = create_qc_evaluator_agent(model="gemini-2.5-flash")
+            
+            # Create runner
+            runner = InMemoryRunner(agent=agent)
+            
+            # Natural language prompt (Agent Orchestration)
+            # Agent performs independent QC evaluation using its medical knowledge
+            prompt = f"""
+You are a clinical QC evaluator. Perform an independent medication-diagnosis QC validation using your expert medical knowledge.
+
+**Input Files:**
+1. {medications_file} - patient medication records (contains patient, encounter, description)
+2. {conditions_file} - patient conditions with SNOMED CT codes (patient, encounter, code, description)
+3. {classifications_file} - drug classifications reference (drug_name, atc_code, atc_class, indication, icd10_codes)
+
+**Important Notes:**
+- The conditions file contains SNOMED CT codes paired with descriptions - use both code AND description to identify diagnoses
+- You must map SNOMED CT to ICD-10 diagnosis codes using your medical coding expertise
+- Use the classifications file as a reference, but apply your independent medical judgment
+
+**Your Task:**
+1. Read all three CSV files using read_csv_file()
+
+2. For EACH medication record:
+   a) Extract the drug name from the description field
+   b) Use your pharmacology knowledge to determine:
+      - Appropriate ATC code (reference classifications file if helpful)
+      - Expected ICD-10 diagnosis codes for this medication's indications
+      - Expected ICD-10 diagnosis ranges for the drug class
+   
+   c) For the patient's encounter, analyze the conditions data:
+      - Read the SNOMED CT code AND description
+      - Map to ICD-10 diagnosis codes using your medical coding expertise
+      - Consider both the code value and the text description
+   
+   d) Evaluate medication-diagnosis alignment:
+      - Compare expected ICD-10 codes with actual patient diagnoses
+      - Determine if medication is appropriate for patient's condition
+      - Status: PASS if diagnosis matches, FAIL if no match
+      - Match type: "exact" for exact code match, "range" for category match, "none" for no match
+   
+   e) Provide clinical reasoning for your assessment
+
+3. Write results to {output_file} using write_dataframe_to_csv() with these columns:
+   patient_id, encounter_id, drug_name, drug_description, atc_code, drug_class,
+   expected_icd10_codes, expected_icd10_ranges, actual_icd10_codes,
+   status, match_type, matched_codes, reason
+
+**Important:** 
+- Process ONLY the medication records shown in the preview from read_csv_file() (typically 5 rows)
+- DO NOT write Python code - use the tools directly to perform the evaluation
+- Actually call write_dataframe_to_csv() to write the output file - don't just describe what you would do
+
+Apply your deep medical knowledge of pharmacology, SNOMED CT to ICD-10 mapping, and clinical practice.
+
+You MUST call write_dataframe_to_csv() tool with the results before completing this task.
+"""
+            
+            print("\n" + "="*70)
+            print("🔬 TESTING AGENT ORCHESTRATION PATTERN - QC EVALUATOR")
+            print("="*70)
+            print(f"Medications:     {medications_file}")
+            print(f"Conditions:      {conditions_file}")
+            print(f"Classifications: {classifications_file}")
+            print(f"Output:          {output_file}")
+            print("="*70)
+            
+            # Run agent with prompt and print progress
+            print("\n🔄 Running agent... (this may take 1-2 minutes)")
+            print("   Agent will: read files → load JSON → match diagnoses → write output\n")
+            
+            response = await runner.run_debug(prompt)
+            
+            # response is a list of events from run_debug()
+            # Extract the final text response
+            response_text = ""
+            tool_calls = 0
+            
+            for event in response:
+                # Check for tool calls
+                if hasattr(event, 'content') and event.content:
+                    for part in event.content.parts:
+                        if hasattr(part, 'function_call') and part.function_call:
+                            tool_calls += 1
+                            func_name = part.function_call.name if hasattr(part.function_call, 'name') else 'unknown'
+                            print(f"   ✓ Tool called: {func_name}")
+                        elif hasattr(part, 'text') and part.text:
+                            response_text += part.text
+            
+            print(f"\n   Total tool calls: {tool_calls}")
+            
+            print("\n" + "="*70)
+            print("📊 AGENT RESPONSE:")
+            print("="*70)
+            print(response_text)
+            print("="*70)
+            
+            return response_text, output_file
+        
+        # Run the async test
+        response_text, output_file = asyncio.run(run_test())
+        
+        # Verify response
+        assert response_text is not None
+        assert len(response_text) > 0
+        
+        # Verify output file was created
+        print("\n" + "="*70)
+        print("📁 VERIFYING OUTPUT FILE:")
+        print("="*70)
+        
+        assert os.path.exists(output_file), \
+            f"Output file was not created: {output_file}"
+        
+        # Verify file contents
+        df = pd.read_csv(output_file)
+        
+        print(f"✅ File created: {output_file}")
+        print(f"   Rows: {len(df)}")
+        print(f"   Columns: {', '.join(df.columns.tolist())}")
+        
+        # Verify structure
+        assert 'drug_name' in df.columns, "Missing 'drug_name' column"
+        assert 'qc_status' in df.columns or 'status' in df.columns, "Missing QC status column"
+        
+        # Verify we have data
+        # Note: Agent processes limited rows due to read_csv_file tool returning only preview (first 5 rows)
+        assert len(df) >= 3, f"Expected at least 3 rows processed by agent, got {len(df)}"
+        print(f"\n⚠️  Note: Agent processed {len(df)} records (read_csv_file tool limitation)")
+        print(f"   The read_csv_file tool shows only first 5 rows as preview")
+        print(f"   Full dataset has 58 records, but agent can only see preview data")
+        
+        print("\n✅ Agent Orchestration test passed!")
+        print(f"   Agent successfully evaluated {len(df)} medication-diagnosis pairs")
+    
+    def test_compare_with_baseline(self):
+        """
+        Compare Agent Orchestration output with test2 baseline.
+        
+        This test does NOT call the agent - it compares the file already
+        generated by test_qc_evaluation_via_prompt with the baseline.
+        
+        Uses similarity scoring since agents are non-deterministic.
+        """
+        
+        # File already generated by previous test
+        output_file = TEST_QC_FLAGS_AGENT_ORCHESTRATION
+        baseline_file = TEST2_BASELINE_QC_FLAGS
+        
+        # Verify files exist
+        assert os.path.exists(output_file), \
+            f"Agent output not found: {output_file}\nRun test_qc_evaluation_via_prompt first!"
+        assert os.path.exists(baseline_file), \
+            f"Baseline file not found: {baseline_file}"
+        
+        # Load results
+        result_df = pd.read_csv(output_file)
+        baseline_df = pd.read_csv(baseline_file)
         
         print("\n" + "="*70)
-        print("🔍 TESTING QC EVALUATOR")
+        print("📊 COMPARING AGENT OUTPUT WITH BASELINE:")
         print("="*70)
-        print(f"📥 Medications: {medications_file}")
-        print(f"📥 Conditions: {conditions_file}")
-        print(f"📥 Classifications: {drug_classifications_file}")
-        print(f"📤 Output: {output_file}")
+        print(f"Agent output:  {len(result_df)} rows")
+        print(f"Baseline:      {len(baseline_df)} rows")
         
-        # Run QC evaluation
-        results_df = evaluate_qc(
-            medications_file=medications_file,
-            conditions_file=conditions_file,
-            drug_classifications_file=drug_classifications_file,
-            output_file=output_file
-        )
+        # Normalize status column name
+        result_status_col = 'qc_status' if 'qc_status' in result_df.columns else 'status'
+        baseline_status_col = 'qc_status' if 'qc_status' in baseline_df.columns else 'status'
         
-        # Verify results
-        assert results_df is not None
-        assert len(results_df) == 3  # 3 medication records
+        # Compare QC outcomes
+        result_pass = len(result_df[result_df[result_status_col].str.upper() == 'PASS'])
+        result_fail = len(result_df[result_df[result_status_col].str.upper() == 'FAIL'])
         
-        print("\n📊 QC Results:")
-        print(results_df[['drug_name', 'atc_code', 'expected_icd10_codes', 'actual_icd10_codes', 'status']])
+        baseline_pass = len(baseline_df[baseline_df[baseline_status_col].str.upper() == 'PASS'])
+        baseline_fail = len(baseline_df[baseline_df[baseline_status_col].str.upper() == 'FAIL'])
         
-        # Count results
-        passed = len(results_df[results_df['status'] == 'PASS'])
-        failed = len(results_df[results_df['status'] == 'FAIL'])
-        unknown = len(results_df[results_df['status'] == 'UNKNOWN_DRUG'])
+        print(f"\nAgent QC Results:    {result_pass} PASS, {result_fail} FAIL")
+        print(f"Baseline QC Results: {baseline_pass} PASS, {baseline_fail} FAIL")
         
-        print(f"\n✅ PASS: {passed}")
-        print(f"❌ FAIL: {failed}")
-        print(f"⚠️  UNKNOWN: {unknown}")
+        # Calculate similarity
+        # Allow some tolerance since LLM may interpret QC rules differently
+        pass_diff = abs(result_pass - baseline_pass)
+        fail_diff = abs(result_fail - baseline_fail)
+        total_diff = pass_diff + fail_diff
         
-        # Verify expected outcomes
-        # We expect at least 2 medications to be evaluated
-        # (Results may vary depending on ATC database state)
-        assert len(results_df) == 3
+        similarity = 1.0 - (total_diff / len(baseline_df)) if len(baseline_df) > 0 else 0
         
-        print("\n✅ QC evaluation test completed!")
+        print(f"\n📈 Similarity Metrics:")
+        print(f"   📊 QC Outcome Similarity: {similarity:.1%}")
+        print(f"   ✅ PASS agreement: {min(result_pass, baseline_pass)}/{max(result_pass, baseline_pass)}")
+        print(f"   ❌ FAIL agreement: {min(result_fail, baseline_fail)}/{max(result_fail, baseline_fail)}")
+        
+        # Assert reasonable similarity
+        # Since QC evaluation involves clinical judgment, we accept 70% similarity
+        assert similarity >= 0.70, \
+            f"QC similarity too low: {similarity:.1%} (expected >= 70%)"
+        
+        print(f"\n✅ Comparison passed!")
+        print(f"   QC Outcome Similarity: {similarity:.1%} (threshold: 70%)")
+        print(f"   Agent QC evaluation is sufficiently similar to baseline")
+    
+    def test_qc_evaluation_with_batch_processing(self, api_key_available):
+        """
+        Test QC evaluation using batch processing mode to handle all 58 medications.
+        
+        This test uses the new batch reading tools (get_csv_info, read_csv_batch)
+        to process the entire 58-medication dataset in batches of 10.
+        
+        The agent should:
+        1. Call get_csv_info() to determine total rows
+        2. Loop through batches calling read_csv_batch()
+        3. Print progress after each batch
+        4. Accumulate results and write once at the end
+        
+        This test generates: tests/tmp/qc_flags_agent_orchestration.csv
+        """
+        
+        async def run_test():
+            # Use test2 data (8-patient dataset with SNOMED CT codes)
+            medications_file = TEST2_MEDICATIONS_FILE
+            conditions_file = TEST2_CONDITIONS_FILE
+            classifications_file = TEST2_DRUG_CLASSIFICATIONS_FILE
+            
+            # Verify inputs exist
+            if not os.path.exists(medications_file):
+                pytest.skip(f"Medications file not found: {medications_file}")
+            if not os.path.exists(conditions_file):
+                pytest.skip(f"Conditions file not found: {conditions_file}")
+            if not os.path.exists(classifications_file):
+                pytest.skip(f"Drug classifications not found: {classifications_file}\nRun test_drug_classifier2.py first!")
+            
+            # Define output file
+            output_file = TEST_QC_FLAGS_AGENT_ORCHESTRATION
+            
+            # Clean output
+            if os.path.exists(output_file):
+                os.remove(output_file)
+            
+            # Create agent
+            agent = create_qc_evaluator_agent(model="gemini-2.5-flash")
+            
+            # Create runner
+            runner = InMemoryRunner(agent=agent)
+            
+            # Natural language prompt for batch processing
+            # Paths now use forward slashes from conftest.py
+            # Keep it simple - let agent decide how to use tools based on its instruction
+            prompt = f"""
+You are a clinical QC evaluator. Perform an independent medication-diagnosis QC validation using your expert medical knowledge.
+
+**Input Files:**
+1. {medications_file} - patient medication records (58 total medications)
+2. {conditions_file} - patient conditions with SNOMED CT codes  
+3. {classifications_file} - drug classifications reference
+
+**Important Notes:**
+- The conditions file contains SNOMED CT codes paired with descriptions - use both code AND description to identify diagnoses
+- You must map SNOMED CT to ICD-10 diagnosis codes using your medical coding expertise
+- Use the classifications file as a reference, but apply your independent medical judgment
+
+**Your Task:**
+Process the first {TEST_ROW_LIMIT} medications from the medications file and evaluate each one.
+
+For EACH medication record:
+1. Extract the drug name from the description field
+2. Use your pharmacology knowledge to determine:
+   - Appropriate ATC code (reference classifications file if helpful)
+   - Expected ICD-10 diagnosis codes for this medication's indications
+   - Expected ICD-10 diagnosis ranges for the drug class
+
+3. For the patient's encounter, analyze the conditions data:
+   - Read the SNOMED CT code AND description
+   - Map to ICD-10 diagnosis codes using your medical coding expertise
+   - Consider both the code value and the text description
+
+4. Evaluate medication-diagnosis alignment:
+   - Compare expected ICD-10 codes with actual patient diagnoses
+   - Determine if medication is appropriate for patient's condition
+   - Status: PASS if diagnosis matches, FAIL if no match
+   - Match type: "exact" for exact code match, "range" for category match, "none" for no match
+
+5. Provide clinical reasoning for your assessment
+
+Write results to {output_file} using write_dataframe_to_csv() with these columns:
+patient_id, encounter_id, drug_name, drug_description, atc_code, drug_class,
+expected_icd10_codes, expected_icd10_ranges, actual_icd10_codes,
+status, match_type, matched_codes, reason
+
+**Important:** 
+- Process {TEST_ROW_LIMIT} medications (use batch processing mode since this is more than 5 rows)
+- DO NOT write Python code - use the tools directly to perform the evaluation
+- Actually call write_dataframe_to_csv() to write the output file
+
+You MUST call write_dataframe_to_csv() tool with the results before completing this task.
+"""
+            
+            print("\n" + "="*70)
+            print("🔬 TESTING BATCH PROCESSING MODE - QC EVALUATOR")
+            print("="*70)
+            print(f"Medications:     {medications_file}")
+            print(f"Conditions:      {conditions_file}")
+            print(f"Classifications: {classifications_file}")
+            print(f"Output:          {output_file}")
+            print(f"Batch size:      {DEFAULT_BATCH_SIZE}")
+            print(f"Row limit:       {TEST_ROW_LIMIT} (test mode)")
+            print("="*70)
+            
+            # Run agent with prompt and print progress
+            print("\n🔄 Running agent with batch processing... (this may take 2-3 minutes)")
+            print("   Agent will: get_csv_info → loop read_csv_batch → write_dataframe\n")
+            
+            response = await runner.run_debug(prompt)
+            
+            # Extract response text and count tool calls
+            response_text = ""
+            tool_calls = 0
+            batch_calls = 0
+            
+            for event in response:
+                if hasattr(event, 'content') and event.content:
+                    for part in event.content.parts:
+                        if hasattr(part, 'function_call') and part.function_call:
+                            tool_calls += 1
+                            func_name = part.function_call.name if hasattr(part.function_call, 'name') else 'unknown'
+                            if func_name == 'read_csv_batch':
+                                batch_calls += 1
+                            print(f"   ✓ Tool called: {func_name}")
+                        elif hasattr(part, 'text') and part.text:
+                            response_text += part.text
+            
+            print(f"\n   Total tool calls: {tool_calls}")
+            print(f"   Batch read calls: {batch_calls}")
+            
+            print("\n" + "="*70)
+            print("📊 AGENT RESPONSE:")
+            print("="*70)
+            print(response_text)
+            print("="*70)
+            
+            return response_text, output_file, batch_calls
+        
+        # Run the async test
+        response_text, output_file, batch_calls = asyncio.run(run_test())
+        
+        # Verify response
+        assert response_text is not None
+        assert len(response_text) > 0
+        
+        # Verify output file was created
+        print("\n" + "="*70)
+        print("📁 VERIFYING BATCH PROCESSING OUTPUT:")
+        print("="*70)
+        
+        assert os.path.exists(output_file), \
+            f"Output file was not created: {output_file}"
+        
+        # Verify file contents
+        df = pd.read_csv(output_file)
+        
+        print(f"✅ File created: {output_file}")
+        print(f"   Rows: {len(df)}")
+        print(f"   Columns: {', '.join(df.columns.tolist())}")
+        
+        # Verify structure
+        assert 'drug_name' in df.columns, "Missing 'drug_name' column"
+        assert 'status' in df.columns, "Missing 'status' column"
+        
+        # Verify batch processing worked
+        assert len(df) >= TEST_ROW_LIMIT * 0.9, \
+            f"Expected around {TEST_ROW_LIMIT} rows with batch processing, got {len(df)}"
+        
+        print(f"\n✅ Batch processing test passed!")
+        print(f"   Agent processed {len(df)} medications using {batch_calls} batch read calls")
+        print(f"   Average medications per batch: {len(df)/max(batch_calls, 1):.1f}")
 
 
 if __name__ == "__main__":
