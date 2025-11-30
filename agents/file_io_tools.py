@@ -7,7 +7,7 @@ Following the FunctionTool pattern from Google ADK.
 
 import pandas as pd
 import os
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import logging
 
 logger = logging.getLogger(__name__)
@@ -140,7 +140,71 @@ def write_dataframe_to_csv(file_path: str, dataframe_dict: Dict[str, Any]) -> st
         return error_msg
 
 
-def get_csv_info(file_path: str) -> str:
+def append_row_to_csv(file_path: str, row_dict: Dict[str, Any]) -> str:
+    """
+    Append a single row to a CSV file, creating the file with headers if it doesn't exist.
+    
+    This enables incremental writing - useful for long-running processes where you want
+    to save results progressively instead of accumulating everything in memory.
+    
+    Args:
+        file_path: Path to the CSV file
+        row_dict: Dictionary with column names as keys and values for this row
+        
+    Returns:
+        Confirmation message or error message
+        
+    Example:
+        result = append_row_to_csv(
+            "output/results.csv",
+            {
+                "patient_id": "P001",
+                "drug_name": "aspirin",
+                "status": "PASS",
+                "reason": "Appropriate for hypertension"
+            }
+        )
+    """
+    try:
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        
+        # Create DataFrame from single row
+        df = pd.DataFrame([row_dict])
+        
+        # If this looks like QC evaluator output, enforce correct column order
+        expected_qc_columns = [
+            'patient_id', 'encounter_id', 'drug_name', 'drug_description', 
+            'atc_code', 'drug_class', 'expected_icd10_codes', 'expected_icd10_ranges', 
+            'actual_icd10_codes', 'status', 'match_type', 'matched_codes', 'reason'
+        ]
+        
+        # Enforce column order if this is QC evaluator output
+        if all(col in df.columns for col in expected_qc_columns):
+            df = df[expected_qc_columns]
+        
+        # Check if file exists
+        file_exists = os.path.exists(file_path)
+        
+        if file_exists:
+            # Append mode - don't write header
+            df.to_csv(file_path, mode='a', header=False, index=False)
+            success_msg = f"Successfully appended 1 row to {file_path}"
+        else:
+            # New file - write with header
+            df.to_csv(file_path, mode='w', header=True, index=False)
+            success_msg = f"Successfully created {file_path} and wrote 1 row"
+        
+        logger.info(success_msg)
+        return success_msg
+        
+    except Exception as e:
+        error_msg = f"ERROR appending to {file_path}: {str(e)}"
+        logger.error(error_msg)
+        return error_msg
+
+
+def get_csv_info(file_path: str) -> Dict[str, Any]:
     """
     Get metadata about a CSV file without loading all data.
     
@@ -262,3 +326,94 @@ def append_to_csv(file_path: str, data: str) -> str:
         error_msg = f"ERROR appending to {file_path}: {str(e)}"
         logger.error(error_msg)
         return error_msg
+
+
+def reorder_csv_rows(
+    input_file: str,
+    reference_file: str,
+    patient_col_input: str = 'patient_id',
+    encounter_col_input: str = 'encounter_id',
+    description_col_input: str = 'drug_description',
+    patient_col_ref: str = 'patient',
+    encounter_col_ref: str = 'encounter',
+    description_col_ref: str = 'description'
+) -> pd.DataFrame:
+    """
+    Reorder input CSV to match the row order of a reference medications file.
+    
+    This ensures QC evaluation output matches the exact order of medications
+    in the input file, even if the agent processed them out of order.
+    
+    Matches on patient + encounter + description to handle multiple medications
+    per encounter correctly.
+    
+    Reorders only the rows that exist in the input file - no validation of missing rows.
+    
+    Args:
+        input_file: Path to file to be reordered (e.g., qc_flags.csv)
+        reference_file: Path to reference medications CSV (defines order)
+        patient_col_input: Patient ID column name in input file (default: 'patient_id')
+        encounter_col_input: Encounter ID column name in input file (default: 'encounter_id')
+        description_col_input: Drug description column name in input file (default: 'drug_description')
+        patient_col_ref: Patient column name in reference file (default: 'patient')
+        encounter_col_ref: Encounter column name in reference file (default: 'encounter')
+        description_col_ref: Description column name in reference file (default: 'description')
+        
+    Returns:
+        Reordered DataFrame matching reference file order (only rows that exist in input)
+        
+    Example:
+        # Reorder QC output to match medications input order
+        reordered_df = reorder_csv_rows(
+            input_file="output/qc_flags.csv",
+            reference_file="input/medications.csv"
+        )
+    """
+    try:
+        # Load files
+        input_df = pd.read_csv(input_file)
+        reference_df = pd.read_csv(reference_file)
+        
+        logger.info(f"Reordering {len(input_df)} rows to match reference file order")
+        
+        # Create merge key for reference file (patient + encounter + description)
+        # This handles multiple medications per encounter
+        reference_df['_merge_key'] = (
+            reference_df[patient_col_ref].astype(str) + '|' + 
+            reference_df[encounter_col_ref].astype(str) + '|' +
+            reference_df[description_col_ref].astype(str)
+        )
+        reference_df['_original_order'] = range(len(reference_df))
+        
+        # Create merge key for input file
+        input_df['_merge_key'] = (
+            input_df[patient_col_input].astype(str) + '|' + 
+            input_df[encounter_col_input].astype(str) + '|' +
+            input_df[description_col_input].astype(str)
+        )
+        
+        # Merge to get original order for each input row
+        merged_df = input_df.merge(
+            reference_df[['_merge_key', '_original_order']],
+            on='_merge_key',
+            how='left'
+        )
+        
+        # Sort by original order
+        reordered_df = merged_df.sort_values('_original_order')
+        
+        # Drop merge columns
+        reordered_df = reordered_df.drop(columns=['_merge_key', '_original_order'])
+        
+        # Save reordered file (overwrites input file with reordered version)
+        reordered_df.to_csv(input_file, index=False)
+        
+        success_msg = f"Successfully reordered {len(reordered_df)} rows in {input_file}"
+        logger.info(success_msg)
+        
+        return reordered_df
+        
+    except Exception as e:
+        error_msg = f"ERROR reordering {input_file}: {str(e)}"
+        logger.error(error_msg)
+        raise
