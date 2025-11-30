@@ -60,7 +60,7 @@ TEST_INPUT_FILES_TEST2 = {
 }
 
 BASELINE_FILES_TEST2 = {
-    'qc_flags': BASELINE_DIR_TEST2 / "baseline_qc_flags_short_8.csv"
+    'qc_flags': BASELINE_DIR_TEST2 / "baseline_qc_flags_agent_orchestration_19.csv"
 }
 
 # Test output file paths

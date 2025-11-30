@@ -20,6 +20,9 @@ https://www.kaggle.com/datasets/mexwell/synthetic-al-medical-records/data
 ---
 
 ## 🧠 Agent Architecture
+
+![Diagram](images\MediQC.png "Architecture overview")
+
 The system runs **2 modular agents** in sequence mimicking human+software drug classification:
 
 1. **drug-identifier**  
@@ -59,6 +62,8 @@ drug-dx-qc-agents/
 │── data/                         # Source input files (committed)
 │   ├── medications_synthetic.csv
 │   ├── conditions_synthetic.csv
+│   ├── medications_synthetic_short_8.csv.csv
+│   ├── conditions_synthetic_short_8.csv.csv
 │
 │── output/                       # Generated results (optionally committed)
 │   └── atc_database.json        # ATC+ICD-10 cache (reused & augmented)
@@ -97,6 +102,7 @@ cd drug-dx-qc-agents
 python -m venv venv
 venv\Scripts\activate   # Windows
 pip install -r requirements.txt
+create `.env` file as in `.env.example` and add GOOGLE_API_KEY
 ```
 
 ---
@@ -181,7 +187,7 @@ The `drug_classifier` agent automatically:
 
 **First Run: 2 agent drug classification pipeline**
 ```bash
-# From an input of a medications csv file, 
+# From an input of a medications csv file (test on short file: medications_synthetic_short_8.csv.csv), 
 # it generates:  
 # - output/atc_database.json: The ATC database
 # - output/drug_names_extracted.csv: Intermediate file from agent 1
@@ -197,11 +203,13 @@ python scripts/build_atc_database.py --medications data/medications_synthetic_sh
 # Use as input the output of the 2 agent pipeline to run the QC evaluation  (via python code orchestration)
 python -m pytest tests/test_qc_evaluator_python.py -v -s  
 
-# Bypass the 2 agent pipeline. Instead, Start with the medications input file to run a QC evaluator agent via a single prompt 
-# To limit token usage: Use a Batch processing configuration as set in tests\conftest.py
+# Bypass the 2 agent pipeline. Instead, start with the medications input file to run a QC evaluator agent via a single prompt! 
+# It may run for 2-3 minutes on 20 medication rows.
+# To limit token usage: Use Batch processing configuration as set in tests\conftest.py
 # DEFAULT_BATCH_SIZE = 10
 # TEST_ROW_LIMIT = 20  
 python -m pytest tests\test_qc_evaluator.py::TestQcEvaluatorAgentOrchestration::test_qc_evaluation_with_batch_processing -v -s
+
 
 # Review results in:
 # tests\tmp\qc_flags_agent_orchestration.csv

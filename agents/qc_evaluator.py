@@ -35,7 +35,7 @@ from google.adk.tools import FunctionTool
 from google.adk.models import Gemini
 from google.adk.runners import InMemoryRunner
 from .drug_extraction_tools import extract_drug_name_regex
-from .file_io_tools import read_csv_file, write_csv_file, write_dataframe_to_csv, get_csv_info, read_csv_batch
+from .file_io_tools import read_csv_file, write_csv_file, write_dataframe_to_csv, get_csv_info, read_csv_batch, append_row_to_csv
 
 # Load environment variables from .env file
 load_dotenv()
@@ -237,8 +237,8 @@ def create_qc_evaluator_agent(model: str = "gemini-2.5-flash") -> Agent:
     
     # File I/O tools
     read_csv_tool = FunctionTool(read_csv_file)
-    write_csv_tool = FunctionTool(write_csv_file)
     write_df_tool = FunctionTool(write_dataframe_to_csv)
+    append_row_tool = FunctionTool(append_row_to_csv)
     
     # Batch reading tools (for large files)
     get_csv_info_tool = FunctionTool(get_csv_info)
@@ -250,8 +250,8 @@ def create_qc_evaluator_agent(model: str = "gemini-2.5-flash") -> Agent:
         name="qc_evaluator",
         tools=[
             read_csv_tool,
-            write_csv_tool,
             write_df_tool,
+            append_row_tool,
             get_csv_info_tool,
             read_csv_batch_tool
         ],
@@ -316,36 +316,41 @@ In the "reason" column, provide detailed explanation including:
 - Any clinical concerns, contraindications, or red flags
 - For FAIL status: explain the mismatch and potential safety concerns
 
-File I/O Operations - Two Modes Available:
+File I/O Operations:
 
-**Small Files or Preview Mode (Quick):**
-- Use read_csv_file() - reads and shows first 5 rows
+**For Small Files (≤5 rows):**
+- Use read_csv_file() to read and show first 5 rows
 - Process the preview data
-- Use write_dataframe_to_csv() to write results
+- Use write_dataframe_to_csv() to write all results at once
 
-**Large Files or Batch Mode (Complete):**
+**For Large Files (>5 rows) - Incremental Writing:**
 1. Use get_csv_info() to check total rows in medications file
-2. Calculate batches needed: total_rows / batch_size (use batch_size=10)
-3. Loop through batches:
-   - Call read_csv_batch(medications_file, start_row=N, batch_size=10)
-   - Process the 10 medications in this batch
-   - After each batch, print progress: "Processed batch X: rows N to N+9 (Y% complete)"
-   - Accumulate results in your dictionary
-   - Increment start_row by batch_size
-4. After all batches, call write_dataframe_to_csv() once with all results
-5. Columns will be automatically reordered to standard format
+2. Use read_csv_file() to read conditions file once for lookup (store in memory)
+3. Loop through medications ONE AT A TIME:
+   - Call read_csv_batch(medications_file, start_row=N, batch_size=1) to read row N
+   - Process the medication: determine ATC code, map to ICD-10, evaluate alignment
+   - Immediately call append_row_to_csv(file_path=OUTPUT_FILE_PATH, row_dict=result)
+     * CRITICAL: Use the EXACT output file path provided in the task prompt
+     * Do NOT modify, interpret, or make the path relative
+     * Use the exact string as provided (e.g., "C:/Dev/git/.../tests/tmp/output.csv")
+   - Print progress: "Processed medication N/total"
+   - Keep a memory cache of drug→ATC and SNOMED→ICD-10 mappings to avoid re-processing
+4. No final write needed - results already saved incrementally
 
-**Batch Processing Example:**
-- File has 58 rows, batch_size=10
-- Batch 0: rows 0-9 (17% complete)
-- Batch 1: rows 10-19 (34% complete)
-- Batch 2: rows 20-29 (52% complete)
-- Batch 3: rows 30-39 (69% complete)
-- Batch 4: rows 40-49 (86% complete)
-- Batch 5: rows 50-57 (100% complete)
-- Write all results at once
+**Benefits of Incremental Writing:**
+- Progress saved immediately - no data loss if interrupted
+- Lower memory usage - process one row at a time
+- Real-time progress tracking
+- Can resume if stopped partway through
 
-For conditions file: Read once with read_csv_file() or get_csv_info() + read_csv_batch() if too large.
+**Example (58 medications):**
+- get_csv_info() → 58 total rows
+- Loop N from 0 to 57:
+  - read_csv_batch(start_row=N, batch_size=1) → get row N
+  - Process medication → evaluate alignment
+  - append_row_to_csv() → save row N immediately
+  - Print: "Processed medication {N+1}/58"
+- Result: 58 rows written incrementally
 
 Input files you'll receive:
 - Medications CSV (patient medication records)

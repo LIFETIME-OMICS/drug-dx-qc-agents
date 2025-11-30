@@ -1,18 +1,20 @@
 from google.adk.agents import LlmAgent
 from google.adk.code_executors import BuiltInCodeExecutor
 from google.adk.sessions import InMemorySessionService
-from google.adk.runners import Runner
+from google.adk.runners import InMemoryRunner
 from google.genai import types
+from google.adk.artifacts import InMemoryArtifactService
 import pandas as pd
 import logging
 import uuid
+from config import DEFAULT_MODEL
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Global session service and runner (initialized on first use)
 _session_service: InMemorySessionService | None = None
-_runner: Runner | None = None
+_runner: InMemoryRunner | None = None
 # Store session data file paths
 _session_data_files: dict[str, dict[str, str]] = {}
 
@@ -21,20 +23,30 @@ _session_data_files: dict[str, dict[str, str]] = {}
 # AGENT CREATION
 # ============================================================================
 
-def create_stats_summarizer_agent(data_csv_strings: dict[str, str]) -> LlmAgent:
+def _create_stats_agent(
+        medications_csv: str,
+        diagnoses_csv: str,
+        qc_flags_csv: str,
+        model=None, 
+    ) -> LlmAgent:
     """Creates a stats summarizer agent that can perform pandas analysis.
     
     Args:
-        data_csv_strings: Dictionary with keys 'medications', 'diagnoses', 'qc_flags' 
-                         containing the CSV data as strings.
+        medications_csv: CSV data as string for medications
+        diagnoses_csv: CSV data as string for diagnoses
+        qc_flags_csv: CSV data as string for qc_flags
+        model: Model name (uses DEFAULT_MODEL if None)
     """
-    meds_csv = data_csv_strings['medications']
-    diag_csv = data_csv_strings['diagnoses']
-    qc_csv = data_csv_strings['qc_flags']
+    if model is None:
+        model = DEFAULT_MODEL
+    
+    meds_csv = medications_csv
+    diag_csv = diagnoses_csv
+    qc_csv = qc_flags_csv
     
     agent = LlmAgent(
         name="stats_summarizer",
-        model="gemini-2.5-flash", 
+        model=DEFAULT_MODEL, 
         code_executor=BuiltInCodeExecutor(),
         instruction=f"""You are a data analysis expert. You have been provided with three CSV datasets as strings.
 
@@ -124,30 +136,31 @@ async def create_stats_session(
     _session_data_files[session_id] = {
         'medications_df': meds_df,
         'diagnoses_df': diagnoses_df,
-        'qc_flags_df': qc_flags_df
+        'qc_flags_df': qc_flags_df,
+        # Placeholder for agent, will be updated below
     }
     
     logger.info("Converted data to CSV strings for agent instruction")
 
     # Create the agent with CSV data strings
-    summarizer_agent = create_stats_summarizer_agent(
-        data_csv_strings={
-            'medications': meds_csv,
-            'diagnoses': diag_csv,
-            'qc_flags': qc_csv,
-        }
+    summarizer_agent = _create_stats_agent(
+        medications_csv=meds_csv,
+        diagnoses_csv=diag_csv,
+        qc_flags_csv=qc_csv,
     )
-
+    
     # Create a new runner for each session
-    _runner = Runner(
-        agent=summarizer_agent,
-        session_service=_session_service,
-        app_name="stats_summarizer",
-    )
+    runner = InMemoryRunner(agent=summarizer_agent, app_name="stats_summarizer")
+    # Manually attach artifact service since it's not in __init__
+    runner.artifact_service = InMemoryArtifactService()
+    
+    # Store agent and runner in session data
+    _session_data_files[session_id]['agent'] = summarizer_agent
+    _session_data_files[session_id]['runner'] = runner
 
     # Create a new session
-    await _session_service.create_session(
-        app_name=_runner.app_name,
+    await runner.session_service.create_session(
+        app_name="stats_summarizer",
         user_id="default_user",
         session_id=session_id,
     )
@@ -162,13 +175,17 @@ async def query_stats_session(session_id: str, query: str) -> str:
     Returns:
         The agent's text response as a string.
     """
-    if not _runner or not _session_service:
-        raise RuntimeError("Session not initialized. Call create_stats_session first.")
+    if session_id not in _session_data_files:
+        raise RuntimeError(f"Session {session_id} not found. Call create_stats_session first.")
 
     response_text = []
     query_content = types.Content(role="user", parts=[types.Part(text=query)])
     
-    async for event in _runner.run_async(
+    # Retrieve the session data
+    session_data = _session_data_files[session_id]
+    runner = session_data["runner"]
+
+    async for event in runner.run_async(
         user_id="default_user",
         session_id=session_id,
         new_message=query_content,
