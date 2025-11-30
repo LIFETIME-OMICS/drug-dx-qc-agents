@@ -71,7 +71,7 @@ metformin
 **Purpose**: Validate drug-diagnosis alignment across patients
 
 **Input**: 
-- `drug_classifications.csv` (with ATC codes & ICD-10)
+- `medications.csv` (with SNOMED codes)
 - `diagnoses.csv` (patient conditions)
 
 **Process**:
@@ -83,7 +83,7 @@ metformin
 
 **Technology**: Pandas + rule-based matching
 
-**Pattern**: InMemoryRunner (stateless batch processing)
+**Pattern**: InMemorySessionService 
 
 ---
 
@@ -114,7 +114,7 @@ metformin
 - `BuiltInCodeExecutor` (dynamic pandas/matplotlib code generation)
 - CSV string embedding (data passed directly in agent instruction)
 
-**Pattern**: SessionService (stateful interactive analysis)
+**Pattern**: InMemorySessionService (interactive analysis session)
 
 **Key Implementation Detail**:
 The `BuiltInCodeExecutor` runs in a sandboxed environment that **cannot access local files**. Therefore, we embed the CSV data directly as strings in the agent's instruction:

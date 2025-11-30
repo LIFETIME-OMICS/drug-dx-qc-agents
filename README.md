@@ -204,15 +204,14 @@ python scripts/build_atc_database.py --medications data/medications_synthetic_sh
 python -m pytest tests/test_qc_evaluator_python.py -v -s
 
 # Bypass the 2 agent pipeline. Instead, start with the medications input file to run a QC evaluator agent via a single prompt! 
-# It may run for 2-3 minutes on 20 medication rows.
-# To limit token usage: Use Batch processing configuration as set in tests\conftest.py
-# DEFAULT_BATCH_SIZE = 10
-# TEST_ROW_LIMIT = 20  
-python -m pytest tests/test_qc_evaluator.py::TestQcEvaluatorAgentOrchestration::test_qc_evaluation_with_batch_processing -v -s
+# To run on 5 medications:
+python scripts/demo_qc_evaluator.py --limit 5
 
+# With custom files:
+python scripts/demo_qc_evaluator.py --medications data/medications_synthetic_short_8.csv --conditions data/conditions_synthetic_short_8.csv --output output/my_qc_results.csv --limit 10
 
 # Review results in:
-# tests\tmp\qc_flags_agent_orchestration.csv
+# output\qc_results_v[version].csv
 ```
 
 ### Data Sources (Priority Order)

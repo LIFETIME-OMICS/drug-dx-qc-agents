@@ -1,715 +1,283 @@
 """
-QC Evaluator Agent (Agent 3 - Pure Function Pattern)
+QC Evaluator Agent - Session-based Single Medication Evaluator
 
-Validates medication-diagnosis alignment using Google ADK and Gemini.
+A streamlined agent that evaluates medication-diagnosis alignment one medication at a time,
+maintaining context across evaluations using InMemorySessionService pattern.
 
-Pure Function Pattern (following drug_identifier.py):
-1. Helper functions for ICD-10 range checking
-2. create_qc_evaluator_agent() - returns Agent
-3. Async processing functions use InMemoryRunner
-4. Sync wrappers for backward compatibility
-
-Workflow:
-1. Load medications with ATC classifications
-2. Load patient diagnoses (conditions)
-3. For each medication encounter, check if patient has matching ICD-10 diagnosis
-4. Use rule-based matching (optional LLM for complex cases)
-5. Output QC report CSV
-
-Input:  medications CSV + conditions CSV + atc_database.json
-Output: qc_flags.csv (patient_id, encounter, drug, expected_icd10, actual_icd10, status)
+Key Features:
+- No file I/O tools - processes data passed as strings in prompts
+- Evaluates one medication prescription at a time
+- Maintains memory of past evaluations and drug mappings
+- Returns CSV row string as output
+- Based on stats_summarizer.py session management pattern
 """
 
-import json
-import os
-import sys
-import pandas as pd
-import asyncio
-import logging
-from typing import List, Dict, Optional
-from datetime import datetime
-from pathlib import Path
-from dotenv import load_dotenv
-from google.adk import Agent
-from google.adk.tools import FunctionTool
-from google.adk.models import Gemini
+from google.adk.agents import LlmAgent
+from google.adk.sessions import InMemorySessionService
 from google.adk.runners import InMemoryRunner
-from .drug_extraction_tools import extract_drug_name_regex
-from .file_io_tools import read_csv_file, write_csv_file, write_dataframe_to_csv, get_csv_info, read_csv_batch, append_row_to_csv
+from google.genai import types
+from google.adk.artifacts import InMemoryArtifactService
+import logging
+import uuid
+from config import DEFAULT_MODEL
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Add project root to path for config import
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from config import ATC_DATABASE_PATH, QC_FLAGS_OUTPUT, TEST_MEDICATIONS_FILE, TEST_CONDITIONS_FILE
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-# ============================================================================
-# CORE TOOL FUNCTIONS (Used by both Python & Agent Orchestration)
-# ============================================================================
-
-def check_range_match_tool(
-    actual_icd10_code: str,
-    expected_icd10_range: str
-) -> Dict:
-    """
-    Check if an ICD-10 code falls within an expected range.
-    
-    This is the single source of truth for range checking, used by both:
-    - Python orchestration (evaluate_medications calls this directly)
-    - Agent orchestration (agent uses this as a tool via wrapper)
-    
-    Examples:
-        check_range_match_tool("I10", "I10-I15") → {'match': True, ...}
-        check_range_match_tool("I50.9", "I30-I52") → {'match': True, ...}
-        check_range_match_tool("E11.9", "I10-I15") → {'match': False, ...}
-    
-    Args:
-        actual_icd10_code: Actual ICD-10 code (e.g., "I10", "I50.9")
-        expected_icd10_range: Expected range (e.g., "I10-I15", "J00-J99")
-    
-    Returns:
-        Dictionary with range match result
-    """
-    if not actual_icd10_code or not expected_icd10_range or '-' not in expected_icd10_range:
-        return {
-            'match': False,
-            'code': actual_icd10_code,
-            'range': expected_icd10_range
-        }
-    
-    # Extract base code (remove decimal part)
-    code_base = actual_icd10_code.split('.')[0]
-    
-    # Parse range
-    try:
-        range_start, range_end = expected_icd10_range.split('-')
-        range_start = range_start.strip()
-        range_end = range_end.strip()
-        
-        # Simple alphabetical comparison works for ICD-10 codes
-        match = range_start <= code_base <= range_end
-        
-        return {
-            'match': match,
-            'code': actual_icd10_code,
-            'range': expected_icd10_range
-        }
-    except:
-        return {
-            'match': False,
-            'code': actual_icd10_code,
-            'range': expected_icd10_range
-        }
-
-
-def check_diagnosis_match_tool(
-    expected_icd10_codes: List[str],
-    expected_icd10_ranges: List[str],
-    actual_icd10_codes: List[str]
-) -> Dict:
-    """
-    Check if actual diagnoses match expected ICD-10 codes or ranges.
-    
-    This is the single source of truth for diagnosis matching, used by both:
-    - Python orchestration (evaluate_medications calls this directly)
-    - Agent orchestration (agent uses this as a tool via wrapper)
-    
-    Args:
-        expected_icd10_codes: Specific ICD-10 codes for drug
-        expected_icd10_ranges: ICD-10 ranges for drug (e.g., ["I10-I15", "E10-E14"])
-        actual_icd10_codes: Patient's actual diagnosis codes
-        
-    Returns:
-        Dictionary with match status and details
-    """
-    # Check exact matches
-    exact_matches = set(expected_icd10_codes) & set(actual_icd10_codes)
-    
-    if exact_matches:
-        return {
-            'status': 'PASS',
-            'match_type': 'exact',
-            'matched_codes': list(exact_matches)
-        }
-    
-    # Check range matches using check_range_match_tool
-    range_matches = []
-    for actual_code in actual_icd10_codes:
-        for expected_range in expected_icd10_ranges:
-            result = check_range_match_tool(actual_code, expected_range)
-            if result['match']:
-                range_matches.append({
-                    'code': actual_code,
-                    'range': expected_range
-                })
-    
-    if range_matches:
-        return {
-            'status': 'PASS',
-            'match_type': 'range',
-            'matched_codes': range_matches
-        }
-    
-    # No match found
-    return {
-        'status': 'FAIL',
-        'match_type': 'none',
-        'matched_codes': []
-    }
-
-
-# ============================================================================
-# AGENT TOOL WRAPPERS (Convert to JSON strings for ADK)
-# ============================================================================
-
-def check_diagnosis_match_tool_wrapper(
-    drug_name: str,
-    drug_class: str,
-    expected_icd10_codes: str,
-    expected_icd10_ranges: str,
-    actual_icd10_codes: str
-) -> str:
-    """
-    Agent tool wrapper: Check if actual diagnoses match expected ICD-10 codes or ranges.
-    
-    This is the ONLY tool the agent needs for diagnosis matching.
-    Internally calls check_diagnosis_match_tool() which uses check_range_match_tool() for range checking.
-    
-    Converts string inputs to lists and returns JSON string for agent consumption.
-    
-    Args:
-        drug_name: Name of the drug
-        drug_class: ATC drug class
-        expected_icd10_codes: Expected ICD-10 codes (semicolon-separated, e.g., "I10;E11.9")
-        expected_icd10_ranges: Expected ICD-10 ranges (semicolon-separated, e.g., "I10-I15;E10-E14")
-        actual_icd10_codes: Actual patient ICD-10 codes (semicolon-separated)
-    
-    Returns:
-        JSON string with match assessment
-    """
-    expected_codes = [c.strip() for c in expected_icd10_codes.split(';') if c.strip()]
-    expected_ranges = [r.strip() for r in expected_icd10_ranges.split(';') if r.strip()]
-    actual = [c.strip() for c in actual_icd10_codes.split(';') if c.strip()]
-    
-    # Call core tool function (which internally uses check_range_match_tool)
-    result = check_diagnosis_match_tool(expected_codes, expected_ranges, actual)
-    
-    # Add clinical reasoning to result
-    if result['status'] == 'PASS':
-        if result['match_type'] == 'exact':
-            result['reason'] = f"Exact ICD-10 match found: {result['matched_codes']}"
-        elif result['match_type'] == 'range':
-            result['reason'] = f"Range match found: {result['matched_codes']}"
-    else:
-        result['reason'] = f"No matching diagnosis found. Expected codes: {expected_codes}, Expected ranges: {expected_ranges}, Actual: {actual}"
-    
-    return json.dumps(result)
+# Global session service and runner (initialized on first use)
+_session_service: InMemorySessionService | None = None
+_session_data: dict[str, dict] = {}
 
 
 # ============================================================================
 # AGENT CREATION
 # ============================================================================
 
-def create_qc_evaluator_agent(model: str = "gemini-2.5-flash") -> Agent:
+def _create_qc_evaluator2_agent(model=None) -> LlmAgent:
     """
-    Create QC Evaluator Agent following pure function pattern.
+    Creates a QC evaluator agent that processes one medication at a time.
     
-    Agent has tools for diagnosis matching and clinical reasoning.
+    This agent has NO tools and works purely through natural language interaction.
+    It maintains memory of previous evaluations to reuse drug mappings.
     
     Args:
-        model: Gemini model to use
+        model: Model name (uses DEFAULT_MODEL if None)
         
     Returns:
-        Configured Google ADK Agent
+        Configured LlmAgent instance
     """
-    # Create tools from wrapper functions (return JSON strings for agent)
-    # Note: check_diagnosis_tool internally uses check_range_match_tool for range checking
-    check_diagnosis_tool = FunctionTool(check_diagnosis_match_tool_wrapper)
+    if model is None:
+        model = DEFAULT_MODEL
     
-    # File I/O tools
-    read_csv_tool = FunctionTool(read_csv_file)
-    write_df_tool = FunctionTool(write_dataframe_to_csv)
-    append_row_tool = FunctionTool(append_row_to_csv)
-    
-    # Batch reading tools (for large files)
-    get_csv_info_tool = FunctionTool(get_csv_info)
-    read_csv_batch_tool = FunctionTool(read_csv_batch)
-    
-    # Create agent with tools and instruction
-    agent = Agent(
-        model=model,
+    agent = LlmAgent(
         name="qc_evaluator",
-        tools=[
-            read_csv_tool,
-            write_df_tool,
-            append_row_tool,
-            get_csv_info_tool,
-            read_csv_batch_tool
-        ],
-        instruction="""
-You are a clinical QC evaluator specializing in medication-diagnosis alignment.
+        model=model,
+        instruction="""You are a medication quality control evaluator with independent medical expertise.
 
-You will perform an independent quality control evaluation using your expert medical knowledge, 
-WITHOUT relying on results from other agents or pre-classified drug databases.
+Your task: Evaluate if a prescribed medication aligns with a patient's diagnosis for a SINGLE medication prescription.
 
-Your task is to assess whether prescribed medications are clinically appropriate for a patient's 
-diagnosed conditions by:
+WORKFLOW FOR EACH MEDICATION:
 
-1. **Reading the medications CSV** and identifying columns with:
-   - Patient identifier
-   - Encounter identifier
-   - Drug information (name, description)
-   - Reason for visit (if available)
-   - Patient diagnosis (if available)
+1. Extract drug information from the medication description provided
+   - Identify the drug name (active ingredient)
+   - Determine ATC code using your pharmacology knowledge
+   - Determine drug class (ATC anatomical group)
 
-2. **For each medication**, use your expert reasoning to:
-   - Map the medication to WHO ATC codes (or synonym ATC codes if no exact match)
-   - Determine expected ICD-10 codes and descriptions for the drug's typical indications
-   - Use your medical knowledge of pharmacology and clinical practice
+2. Map drug to expected ICD-10 codes
+   - Use your medical expertise to determine the drug's indications
+   - List expected ICD-10 codes for those indications
+   - List expected ICD-10 code ranges (e.g., "I10-I15" for hypertension)
 
-3. **Reading the conditions CSV** (if available) and:
-   - Find matching patient and encounter records
-   - Identify columns containing reasons for visit
-   - Extract actual patient diagnoses
+3. Extract and map diagnosis information
+   - If a condition/diagnosis is provided, extract the SNOMED CT code
+   - Map SNOMED CT to ICD-10 code(s) using your medical coding knowledge
+   - If no condition is provided, check if medication reasondescription suggests a diagnosis
 
-4. **Evaluate medication-diagnosis alignment** by comparing:
-   - Expected diagnoses (from your medical knowledge of the drug)
-   - Actual diagnoses (from patients' files)
+4. Compare medication indication to diagnosis
+   - Status: "PASS" if diagnosis matches drug indication, "FAIL" if no match
+   - Match_type: "exact" (specific code match), "range" (code in range), or "none"
+   - Matched_codes: List the ICD-10 codes that matched
 
-5. **Write evaluation results** to CSV with these columns IN THIS EXACT ORDER:
-   patient_id, encounter_id, drug_name, drug_description, atc_code, drug_class, 
-   expected_icd10_codes, expected_icd10_ranges, actual_icd10_codes, status, match_type, 
-   matched_codes, reason
+5. IMPORTANT: Remember drug mappings across evaluations
+   - If you see the same drug again (e.g., "amLODIPine 2.5 MG"), reuse your previous mapping
+   - Build up your knowledge base of drug→ATC→ICD-10 mappings as you process medications
+   - This makes subsequent evaluations faster and more consistent
+   - When reusing a drug mapping from memory, ADD "[REUSED FROM MEMORY]" at the END of the reason field
 
-**CRITICAL: Maintain this exact column order when writing the CSV file.**
+OUTPUT FORMAT:
 
-**Output Format Example:**
-```csv
-patient_id,encounter_id,drug_name,drug_description,atc_code,drug_class,expected_icd10_codes,expected_icd10_ranges,actual_icd10_codes,status,match_type,matched_codes,reason
-P1,E1,amlodipine,amLODIPine 2.5 MG Oral Tablet,C08CA01,"Calcium channel blockers, dihydropyridine derivatives",I10; I20.9,I10-I15; I20-I25,I10,PASS,exact,"['I10']",Patient has hypertension (I10) which is primary indication for amlodipine
-P2,E20,lisinopril,lisinopril 10 MG Oral Tablet,C09AA03,"ACE inhibitors, plain",I10; I50.9,I10-I15; I30-I52,I10,PASS,exact,"['I10']",ACE inhibitor appropriately prescribed for hypertension
-P3,E99,penicillin v,Penicillin V Potassium 250 MG,J01CE02,Beta-lactam antibacterials,J02.0; H66.9; A46,J00-J99; H60-H95,E11.9,FAIL,none,"[]",Antibiotic prescribed but patient only has diabetes diagnosis - infection indication missing
-```
+Return ONLY a single CSV row with exactly 14 columns (no header, no extra text):
 
-**Status Values:**
-- **'PASS'** if patient's reported diagnoses match expected diagnoses:
-  - match_type = 'exact': exact ICD-10 code match found
-  - match_type = 'range': diagnosis matches expected range for the drug class
-- **'FAIL'** if patient's reported diagnoses do NOT match expected diagnoses:
-  - match_type = 'fail': no matching diagnosis found
-- **'UNKNOWN_DRUG'** if unable to classify the medication
+patient_id,encounter_id,drug_name,drug_description,atc_code,drug_class,expected_icd10_codes,expected_icd10_ranges,actual_icd10_codes,status,match_type,matched_codes,reason,snomed_code
 
-**Clinical Reasoning Requirements:**
-In the "reason" column, provide detailed explanation including:
-- Why you mapped the drug to specific ATC codes
-- What diagnoses you expect for this medication based on pharmacology
-- Whether actual diagnoses align with expected clinical use
-- Any clinical concerns, contraindications, or red flags
-- For FAIL status: explain the mismatch and potential safety concerns
+COLUMN DEFINITIONS:
+- patient_id: Patient UUID from medication record
+- encounter_id: Encounter UUID from medication record
+- drug_name: Active ingredient (e.g., "Amlodipine")
+- drug_description: Full description from medication record
+- atc_code: ATC code (e.g., "C08CA01")
+- drug_class: ATC anatomical group (e.g., "Cardiovascular System")
+- expected_icd10_codes: Comma-separated list of expected ICD-10 codes
+- expected_icd10_ranges: Comma-separated list of ICD-10 ranges
+- actual_icd10_codes: ICD-10 codes from patient's diagnosis
+- status: "PASS" or "FAIL"
+- match_type: "exact", "range", or "none"
+- matched_codes: ICD-10 codes that matched (if any)
+- reason: Brief explanation of the evaluation result
+- snomed_code: SNOMED CT code from diagnosis (if available)
 
-File I/O Operations:
+EXAMPLE OUTPUT (first time seeing this drug):
+3e77485a-596e-8b53-a9f0-78a5d3b1c861,a2bb23a7-f8af-9bdd-ace5-a0d83f8b2428,Amlodipine,amLODIPine 2.5 MG Oral Tablet,C08CA01,Cardiovascular System,I10|I11|I12|I13|I14|I15,I10-I15,I10,PASS,exact,I10,Amlodipine indicated for hypertension; diagnosed with essential hypertension (I10),59621000
 
-**For Small Files (≤5 rows):**
-- Use read_csv_file() to read and show first 5 rows
-- Process the preview data
-- Use write_dataframe_to_csv() to write all results at once
+EXAMPLE OUTPUT (drug seen before in this session):
+3e77485a-596e-8b53-a9f0-78a5d3b1c861,9c7f4eeb-f884-15f0-8461-ca62b948a95a,Amlodipine,amLODIPine 2.5 MG Oral Tablet,C08CA01,Cardiovascular System,I10|I11|I12|I13|I14|I15,I10-I15,I10,PASS,exact,I10,Amlodipine indicated for hypertension; diagnosed with essential hypertension (I10) [REUSED FROM MEMORY],59621000
 
-**For Large Files (>5 rows) - Incremental Writing:**
-1. Use get_csv_info() to check total rows in medications file
-2. Use read_csv_file() to read conditions file once for lookup (store in memory)
-3. Loop through medications ONE AT A TIME:
-   - Call read_csv_batch(medications_file, start_row=N, batch_size=1) to read row N
-   - Process the medication: determine ATC code, map to ICD-10, evaluate alignment
-   - Immediately call append_row_to_csv(file_path=OUTPUT_FILE_PATH, row_dict=result)
-     * CRITICAL: Use the EXACT output file path provided in the task prompt
-     * Do NOT modify, interpret, or make the path relative
-     * Use the exact string as provided (e.g., "C:/Dev/git/.../tests/tmp/output.csv")
-   - Print progress: "Processed medication N/total"
-   - Keep a memory cache of drug→ATC and SNOMED→ICD-10 mappings to avoid re-processing
-4. No final write needed - results already saved incrementally
-
-**Benefits of Incremental Writing:**
-- Progress saved immediately - no data loss if interrupted
-- Lower memory usage - process one row at a time
-- Real-time progress tracking
-- Can resume if stopped partway through
-
-**Example (58 medications):**
-- get_csv_info() → 58 total rows
-- Loop N from 0 to 57:
-  - read_csv_batch(start_row=N, batch_size=1) → get row N
-  - Process medication → evaluate alignment
-  - append_row_to_csv() → save row N immediately
-  - Print: "Processed medication {N+1}/58"
-- Result: 58 rows written incrementally
-
-Input files you'll receive:
-- Medications CSV (patient medication records)
-- Patient conditions CSV (patient diagnoses)
-
-Apply your deep medical knowledge of pharmacology, disease indications, and clinical practice 
-to provide thorough, evidence-based quality control evaluation.
-""",
-        output_key="qc_flags"
+CRITICAL RULES:
+- Output ONLY the CSV row - no markdown, no explanations, no extra text
+- Use pipe (|) to separate multiple codes within a field (NEVER use commas within a field)
+- If a field contains commas, wrap the entire field in double quotes
+- If a field is empty/unknown, leave it blank (but include the comma separator)
+- Always include all 14 fields separated by commas
+- In the reason field, avoid using commas - use semicolons or periods instead
+- Remember your drug mappings to maintain consistency across evaluations
+"""
     )
     
     return agent
 
 
 # ============================================================================
-# SNOMED CT TO ICD-10 MAPPING
+# SESSION MANAGEMENT
 # ============================================================================
 
-def map_snomed_to_icd10(
-    medication_data: Dict[str, tuple],
-    condition_data: Dict[str, tuple],
-    model: str = "gemini-2.5-flash"
-) -> List[str]:
+async def create_qc_session(model=None) -> str:
     """
-    Map SNOMED CT codes to ICD-10 codes using Gemini API.
-    
-    This function takes SNOMED CT codes paired with their descriptions from 
-    medications and conditions files and maps them to ICD-10 diagnosis codes.
+    Creates a new QC evaluation session.
     
     Args:
-        medication_data: Dict with paired (code, description) tuples:
-            - 'reason': (reasoncode, reasondescription)
-            - 'encounter.reason': (encounter.reasoncode, encounter.reasondescription)
-        condition_data: Dict with paired (code, description) tuples:
-            - 'condition': (code, description)
-            - 'encounter.reason': (encounter.reasoncode, encounter.reasondescription)
-        model: Gemini model to use
+        model: Optional model override
         
     Returns:
-        List of ICD-10 codes mapped from SNOMED CT codes
+        The new session ID.
     """
-    # Filter out empty/None/0 values
-    def is_valid_value(value) -> bool:
-        if value is None or value == '' or value == 0 or value == '0':
-            return False
-        if pd.isna(value):
-            return False
-        return True
-    
-    # Collect all valid code-description pairs
-    code_pairs = []
-    
-    for key, (code, description) in medication_data.items():
-        if is_valid_value(code) or is_valid_value(description):
-            code_str = str(code) if is_valid_value(code) else "N/A"
-            desc_str = str(description) if is_valid_value(description) else "N/A"
-            code_pairs.append(f"Medication {key}: Code={code_str}, Description={desc_str}")
-    
-    for key, (code, description) in condition_data.items():
-        if is_valid_value(code) or is_valid_value(description):
-            code_str = str(code) if is_valid_value(code) else "N/A"
-            desc_str = str(description) if is_valid_value(description) else "N/A"
-            code_pairs.append(f"Condition {key}: Code={code_str}, Description={desc_str}")
-    
-    # If no valid data, return empty list
-    if not code_pairs:
-        return []
-    
-    # Build prompt for LLM
-    pairs_text = "\n".join(code_pairs)
-    prompt = f"""You are a medical coding expert specializing in SNOMED CT to ICD-10 mapping.
+    global _session_service, _session_data
 
-You are given clinical codes (likely SNOMED CT) paired with their descriptions. Map these to the appropriate ICD-10 diagnosis codes.
+    if _session_service is None:
+        _session_service = InMemorySessionService()
 
-Clinical code-description pairs:
-{pairs_text}
+    # Generate session ID
+    session_id = str(uuid.uuid4())
+    logger.info("Creating QC evaluation session: %s", session_id)
 
-Analyze both the codes and descriptions to identify the diagnoses, then return the corresponding ICD-10 codes.
+    # Create the agent
+    qc_agent = _create_qc_evaluator2_agent(model=model)
+    
+    # Create a new runner for this session
+    runner = InMemoryRunner(agent=qc_agent, app_name="qc_evaluator")
+    # Manually attach artifact service since it's not in __init__
+    runner.artifact_service = InMemoryArtifactService()
+    
+    # Store agent and runner in session data
+    _session_data[session_id] = {
+        'agent': qc_agent,
+        'runner': runner,
+        'evaluations_count': 0
+    }
 
-Return ONLY a JSON array of ICD-10 codes (e.g., ["I10", "E11.9", "J44.0"]).
-Include all relevant ICD-10 codes that match the described conditions.
-If no clear diagnosis can be mapped, return an empty array [].
-
-Response format: ["CODE1", "CODE2", ...]"""
-    
-    try:
-        # Call Gemini API
-        import google.genai as genai
-        api_key = os.getenv('GOOGLE_API_KEY')
-        if not api_key:
-            logger.warning("No GOOGLE_API_KEY found, skipping LLM enrichment")
-            return []
-        
-        client = genai.Client(api_key=api_key)
-        response = client.models.generate_content(
-            model=model,
-            contents=prompt
-        )
-        
-        # Parse JSON response
-        response_text = response.text.strip()
-        
-        # Extract JSON from response (may have markdown code blocks)
-        if response_text.startswith("```"):
-            # Remove markdown code blocks
-            lines = response_text.split('\n')
-            response_text = '\n'.join(lines[1:-1]) if len(lines) > 2 else response_text
-            response_text = response_text.strip()
-        
-        # Parse JSON
-        icd10_codes = json.loads(response_text)
-        
-        if isinstance(icd10_codes, list):
-            # Filter to valid ICD-10 format
-            valid_codes = [code for code in icd10_codes if isinstance(code, str) and len(code) >= 3]
-            logger.debug(f"Extracted {len(valid_codes)} ICD-10 codes from text descriptions")
-            return valid_codes
-        else:
-            logger.warning(f"Unexpected response format: {type(icd10_codes)}")
-            return []
-            
-    except Exception as e:
-        logger.warning(f"Error extracting ICD-10 from text: {e}")
-        return []
-
-
-# ============================================================================
-# BATCH PROCESSING
-# ============================================================================
-
-def evaluate_medications(
-    medications_file: str,
-    conditions_file: str,
-    drug_classifications_file: str,
-    output_file: str = "output/qc_flags.csv"
-) -> pd.DataFrame:
-    """
-    Evaluate medication-diagnosis alignment for all patients.
-    
-    Args:
-        medications_file: Path to medications CSV
-        conditions_file: Path to conditions CSV
-        drug_classifications_file: Path to drug classifications CSV (output from drug_classifier)
-        output_file: Path to output QC flags CSV
-        
-    Returns:
-        DataFrame with QC evaluation results
-    """
-    logger.info(f"Starting QC evaluation")
-    logger.info(f"📥 Medications: {medications_file}")
-    logger.info(f"📥 Conditions: {conditions_file}")
-    logger.info(f"📥 Classifications: {drug_classifications_file}")
-    logger.info(f"📤 Output: {output_file}")
-    
-    # Load data
-    medications_df = pd.read_csv(medications_file)
-    conditions_df = pd.read_csv(conditions_file)
-    classifications_df = pd.read_csv(drug_classifications_file)
-    
-    # Normalize column names to lowercase for consistency
-    medications_df.columns = medications_df.columns.str.lower()
-    conditions_df.columns = conditions_df.columns.str.lower()
-    
-    # Convert classifications to dictionary for fast lookup
-    drug_lookup = {}
-    for _, row in classifications_df.iterrows():
-        drug_name = row['drug_name'].lower().strip()
-        # Parse icd10_codes - it may be JSON string or comma-separated
-        icd10_codes_raw = row.get('icd10_codes', '')
-        if isinstance(icd10_codes_raw, str):
-            # Try parsing as JSON first
-            try:
-                import json
-                icd10_codes = json.loads(icd10_codes_raw)
-            except:
-                # Fall back to comma-separated
-                icd10_codes = [code.strip() for code in icd10_codes_raw.split(',') if code.strip()]
-        else:
-            icd10_codes = []
-        
-        drug_lookup[drug_name] = {
-            'code': row.get('atc_code', 'UNKNOWN'),
-            'drug_class': row.get('atc_class', 'Unknown'),
-            'indication': row.get('indication', ''),
-            'icd10_codes': icd10_codes,
-            'indication_icd10_ranges': []  # Not in CSV format
-        }
-    
-    logger.info(f"📊 Loaded {len(medications_df)} medication records")
-    logger.info(f"📊 Loaded {len(conditions_df)} condition records")
-    logger.info(f"📊 Loaded {len(drug_lookup)} drug classifications")
-    
-    # Results list
-    qc_results = []
-    
-    # Process each medication record
-    for idx, med_row in medications_df.iterrows():
-        patient_id = med_row['patient']
-        encounter_id = med_row['encounter']
-        drug_description = med_row['description']
-        
-        # Extract drug name
-        drug_name = extract_drug_name_regex(drug_description)
-        drug_key = drug_name.lower().strip()
-        
-        # Get drug classification data
-        if drug_key not in drug_lookup:
-            logger.warning(f"⚠️  Drug not in classifications: {drug_name}")
-            qc_results.append({
-                'patient_id': patient_id,
-                'encounter_id': encounter_id,
-                'drug_name': drug_name,
-                'drug_description': drug_description,
-                'atc_code': 'UNKNOWN',
-                'drug_class': 'Unknown',
-                'expected_icd10_codes': 'UNKNOWN',
-                'expected_icd10_ranges': 'UNKNOWN',
-                'actual_icd10_codes': '',
-                'status': 'UNKNOWN_DRUG',
-                'match_type': 'none',
-                'matched_codes': '',
-                'reason': ''  # Empty reason column
-            })
-            continue
-        
-        drug_data = drug_lookup[drug_key]
-        expected_codes = drug_data.get('icd10_codes', [])
-        expected_ranges = drug_data.get('indication_icd10_ranges', [])
-        
-        # Get patient's diagnoses for this encounter
-        encounter_conditions = conditions_df[
-            (conditions_df['patient'] == patient_id) &
-            (conditions_df['encounter'] == encounter_id)
-        ]
-        
-        # Map SNOMED CT codes to ICD-10 using LLM
-        # Collect medication SNOMED code-description pairs
-        med_data = {
-            'reason': (
-                med_row.get('reasoncode', ''),
-                med_row.get('reasondescription', '')
-            ),
-            'encounter.reason': (
-                med_row.get('encounter.reasoncode', ''),
-                med_row.get('encounter.reasondescription', '')
-            )
-        }
-        
-        # Collect condition SNOMED code-description pairs
-        cond_data = {}
-        if not encounter_conditions.empty:
-            first_cond = encounter_conditions.iloc[0]
-            cond_data = {
-                'condition': (
-                    first_cond.get('code', ''),
-                    first_cond.get('description', '')
-                ),
-                'encounter.reason': (
-                    first_cond.get('encounter.reasoncode', ''),
-                    first_cond.get('encounter.reasondescription', '')
-                )
-            }
-        
-        # Map SNOMED CT to ICD-10 codes using LLM
-        actual_codes = map_snomed_to_icd10(med_data, cond_data)
-        
-        if actual_codes:
-            logger.info(f"    📝 Mapped {len(actual_codes)} ICD-10 codes from SNOMED: {actual_codes}")
-        
-        # Check for match using core tool function
-        match_result = check_diagnosis_match_tool(
-            expected_codes,
-            expected_ranges,
-            actual_codes
-        )
-        
-        # Record result
-        qc_results.append({
-            'patient_id': patient_id,
-            'encounter_id': encounter_id,
-            'drug_name': drug_name,
-            'drug_description': drug_description,
-            'atc_code': drug_data.get('code', 'UNKNOWN'),
-            'drug_class': drug_data.get('drug_class', 'Unknown'),
-            'expected_icd10_codes': '; '.join(expected_codes),
-            'expected_icd10_ranges': '; '.join(expected_ranges),
-            'actual_icd10_codes': '; '.join(actual_codes) if actual_codes else 'NONE',
-            'status': match_result['status'],
-            'match_type': match_result['match_type'],
-            'matched_codes': str(match_result['matched_codes']),
-            'reason': ''  # Empty reason column (no AI reasoning in evaluate_medications)
-        })
-    
-    # Create DataFrame
-    results_df = pd.DataFrame(qc_results)
-    
-    # Save to CSV
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    results_df.to_csv(output_file, index=False)
-    
-    # Summary statistics
-    total = len(results_df)
-    passed = len(results_df[results_df['status'] == 'PASS'])
-    failed = len(results_df[results_df['status'] == 'FAIL'])
-    unknown = len(results_df[results_df['status'] == 'UNKNOWN_DRUG'])
-    
-    logger.info(f"\n{'='*70}")
-    logger.info(f"✅ QC EVALUATION COMPLETE")
-    logger.info(f"{'='*70}")
-    logger.info(f"📊 Total medications evaluated: {total}")
-    logger.info(f"✅ PASS (matching diagnosis): {passed} ({passed/total*100:.1f}%)")
-    logger.info(f"❌ FAIL (no matching diagnosis): {failed} ({failed/total*100:.1f}%)")
-    logger.info(f"⚠️  UNKNOWN (drug not in database): {unknown}")
-    logger.info(f"📤 Results saved to: {output_file}\n")
-    
-    return results_df
-
-
-def evaluate_qc(
-    medications_file: str = None,
-    conditions_file: str = None,
-    drug_classifications_file: str = None,
-    output_file: str = None
-) -> pd.DataFrame:
-    """
-    Main entry point for QC evaluation.
-    
-    Args:
-        medications_file: Path to medications CSV (default: from config.py)
-        conditions_file: Path to conditions CSV (default: from config.py)
-        drug_classifications_file: Path to drug classifications CSV (default: output/drug_classifications.csv)
-        output_file: Path to output QC flags CSV (default: from config.py)
-        
-    Returns:
-        DataFrame with QC evaluation results
-    """
-    from config import OUTPUT_DIR
-    
-    # Use config defaults if not specified
-    medications_file = medications_file or TEST_MEDICATIONS_FILE
-    conditions_file = conditions_file or TEST_CONDITIONS_FILE
-    drug_classifications_file = drug_classifications_file or str(OUTPUT_DIR / "drug_classifications.csv")
-    output_file = output_file or QC_FLAGS_OUTPUT
-    
-    print("\n" + "="*70)
-    print("🔍 QC EVALUATOR AGENT - Medication-Diagnosis Alignment Check")
-    print("="*70)
-    
-    # Evaluate medications
-    results = evaluate_medications(
-        medications_file=medications_file,
-        conditions_file=conditions_file,
-        drug_classifications_file=drug_classifications_file,
-        output_file=output_file
+    # Create a new session
+    await runner.session_service.create_session(
+        app_name="qc_evaluator",
+        user_id="default_user",
+        session_id=session_id,
     )
-    
-    return results
+    logger.info("Created new QC evaluation session: %s", session_id)
+    return session_id
 
+
+async def evaluate_medication(session_id: str, medication_data: dict, condition_data: dict = None) -> str:
+    """
+    Evaluates a single medication using the session's agent.
+    
+    Args:
+        session_id: The session ID
+        medication_data: Dictionary with medication fields
+        condition_data: Optional dictionary with condition fields
+        
+    Returns:
+        CSV row string with evaluation results
+    """
+    if session_id not in _session_data:
+        raise RuntimeError(f"Session {session_id} not found. Call create_qc_session first.")
+
+    # Build the prompt for this medication
+    prompt_parts = ["Evaluate this medication prescription:\n"]
+    
+    # Add medication information
+    prompt_parts.append("MEDICATION:")
+    for key, value in medication_data.items():
+        prompt_parts.append(f"  {key}: {value}")
+    
+    # Add condition information if available
+    if condition_data:
+        prompt_parts.append("\nCONDITION:")
+        for key, value in condition_data.items():
+            prompt_parts.append(f"  {key}: {value}")
+    else:
+        prompt_parts.append("\nCONDITION: None provided (check medication reasondescription)")
+    
+    prompt_parts.append("\nProvide the CSV row with evaluation results.")
+    
+    prompt = "\n".join(prompt_parts)
+    
+    # Send query to agent
+    response_text = []
+    query_content = types.Content(role="user", parts=[types.Part(text=prompt)])
+    
+    # Retrieve the session data
+    session_data = _session_data[session_id]
+    runner = session_data["runner"]
+
+    async for event in runner.run_async(
+        user_id="default_user",
+        session_id=session_id,
+        new_message=query_content,
+    ):
+        # Check if event has final response content
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.text and part.text.strip() and part.text != "None":
+                    response_text.append(part.text)
+    
+    # Increment evaluation count
+    session_data['evaluations_count'] += 1
+    
+    result = "\n".join(response_text).strip() if response_text else ""
+    logger.info("Evaluation %d complete (session %s)", 
+                session_data['evaluations_count'], session_id[:8])
+    return result
+
+
+async def close_qc_session(session_id: str) -> None:
+    """Cleans up a session and removes stored data."""
+    global _session_data
+    
+    logger.info("Closing QC evaluation session: %s", session_id)
+    
+    # Clean up stored session data
+    if session_id in _session_data:
+        eval_count = _session_data[session_id]['evaluations_count']
+        logger.info("Session completed %d evaluations", eval_count)
+        del _session_data[session_id]
+        logger.info("Removed session data from memory")
+
+
+# ============================================================================
+# TESTING
+# ============================================================================
 
 if __name__ == "__main__":
-    # Test with sample data
-    evaluate_qc()
+    import asyncio
+    
+    async def test():
+        """Quick test of the agent."""
+        print("Creating QC evaluation session...")
+        session_id = await create_qc_session()
+        print(f"Session created: {session_id}\n")
+        
+        # Test medication
+        med_data = {
+            'patient': '3e77485a-596e-8b53-a9f0-78a5d3b1c861',
+            'encounter': 'a2bb23a7-f8af-9bdd-ace5-a0d83f8b2428',
+            'description': 'amLODIPine 2.5 MG Oral Tablet',
+            'reasoncode': '59621000',
+            'reasondescription': 'Hypertension'
+        }
+        
+        print("Evaluating test medication...")
+        result = await evaluate_medication(session_id, med_data)
+        print(f"\nResult:\n{result}\n")
+        
+        await close_qc_session(session_id)
+        print("Session closed")
+    
+    asyncio.run(test())
