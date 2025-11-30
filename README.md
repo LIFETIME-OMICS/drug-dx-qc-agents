@@ -21,7 +21,7 @@ https://www.kaggle.com/datasets/mexwell/synthetic-al-medical-records/data
 
 ## 🧠 Agent Architecture
 
-![Diagram](images\MediQC.png "Architecture overview")
+![Diagram](images/MediQC.png "Architecture overview")
 
 The system runs **2 modular agents** in sequence mimicking human+software drug classification:
 
@@ -208,7 +208,7 @@ python -m pytest tests/test_qc_evaluator_python.py -v -s
 # To limit token usage: Use Batch processing configuration as set in tests\conftest.py
 # DEFAULT_BATCH_SIZE = 10
 # TEST_ROW_LIMIT = 20  
-python -m pytest tests\test_qc_evaluator.py::TestQcEvaluatorAgentOrchestration::test_qc_evaluation_with_batch_processing -v -s
+python -m pytest tests/test_qc_evaluator.py::TestQcEvaluatorAgentOrchestration::test_qc_evaluation_with_batch_processing -v -s
 
 
 # Review results in:
