@@ -1,14 +1,17 @@
 drug_name,atc_code,atc_class,indication,icd10_codes,icd10_mapping_source,source,needs_verification,comment
-cetirizine,R06AE07,Piperazine derivatives,Allergic rhinitis/Urticaria,"J30.1, J30.3, L50.1",llm_knowledge,WHO ATC/DDD Index,False,
-chlorpheniramine,R06AB04,Substituted alkylamines,Allergic rhinitis/Urticaria/Allergic conjunctivitis,"J30.4, L50.0, H10.1",llm_knowledge,WHO ATC/DDD Index,False,
-methadone,N07BC02,Drugs used in opioid dependence,Opioid dependence,"F11.20, F11.21, F11.23",llm_knowledge,WHO ATC/DDD Index,False,
-leucovorin,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,True,
-oxaliplatin,L01XA03,Platinum compounds,Colorectal cancer,"C18.9, C19, C20",llm_knowledge,WHO ATC/DDD Index,False,
-azithromycin,J01FA10,Macrolides,Pneumonia/Acute otitis media/Acute sinusitis/Chlamydia infection,"J18.9, H66.90, J01.90, A74.9",llm_knowledge,WHO ATC/DDD Index,False,
-norinyl +day pack,G03AA05,"Progestogens and estrogens, fixed combinations",Contraception/Menstrual cycle disorders/Dysmenorrhoea,"Z30.011, N92.6, N94.6",llm_knowledge,WHO ATC/DDD Index,False,
-mestranol norethynodrel,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,True,
-kyleena,G03AC03,Progestogens,Contraception/Heavy menstrual bleeding,"Z30.0, N92.0",llm_knowledge,WHO ATC/DDD Index,False,
-furosemide,C03CA01,"Sulfonamides, plain",Edema/Hypertension/Heart failure/Chronic kidney disease,"I50.0, I10, R60.9, N18.9",llm_knowledge,WHO ATC/DDD Index,False,
-oxycodone,N02AA05,Natural opium alkaloids,Moderate to severe pain/Chronic pain,"G89.1, G89.2, G89.4",llm_knowledge,WHO ATC/DDD Index,False,from_cache
-hydrocodone,R05DA03,Opium alkaloids and derivatives,Pain/Cough,"G89.29, R05",llm_knowledge,WHO ATC/DDD Index,False,
-buprenorphine naloxone,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,True,
+amlodipine,C08CA01,Dihydropyridine derivatives,Hypertension/Angina pectoris,"I10, I20.9",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+loratadine,R06AX13,Other antihistamines for systemic use,Allergic rhinitis/Urticaria,"J30.4, L50.9",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+epinephrine,A01AD01,Other agents for local oral treatment,Anaphylactic shock/Cardiac arrest,"T78.2, I46.9",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+fluticasone propionate,D07AC17,"Corticosteroids, potent (group III)",Atopic dermatitis/Psoriasis,"L20.9, L40.9",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+albuterol,R03AC02,Selective beta-2-adrenoreceptor agonists,Asthma/Chronic Obstructive Pulmonary Disease (COPD)/Bronchospasm,"J45.909, J45.901, J44.9, J44.1",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+lisinopril,C09AA03,"ACE inhibitors, plain",Hypertension/Heart failure/Chronic ischemic heart disease/Diabetic nephropathy,"I10, I50.9, I25.9, E11.22",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+ibuprofen,C01EB16,Other cardiac preparations,Pain/Inflammation/Fever/Dysmenorrhea,"R52.9, R50.9, M25.50, N94.6",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+hydrocortisone,A01AC03,Corticosteroids for local oral treatment,Aphthous stomatitis/Oral lichen planus,"K12.0, L43.3",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+naproxen,G02CC02,Antiinflammatory products for vaginal administration,Dysmenorrhea/Arthritis/Musculoskeletal pain and inflammation,"N94.6, M19.90, M06.9, M79.6",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+acetaminophen oxycodone,N02AJ17,Opioids in combination with non-opioid analgesics,Moderate to severe acute pain/Moderate to severe chronic pain,"G89.11, G89.29",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+oxycodone,N02AA05,Natural opium alkaloids,Moderate to severe pain/Chronic pain,"G89.1, G89.2, G89.4",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+acetaminophen hydrocodone,N02AJ22,Opioids in combination with non-opioid analgesics,Moderate to severe pain,"G89.18, G89.29, G89.3",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+acetaminophen dextromethorphan doxylamine,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,TRUE,
+amoxicillin clavulanate,UNKNOWN,Unknown,Unknown,,,NOT_FOUND,TRUE,
+acetaminophen,N02BE01,Anilides,Pain/Fever,"R52.9, R50.9, R51",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
+ferrous,B03AD01,Iron in combination with folic acid,Iron deficiency anemia/Folic acid deficiency anemia/Anemia in pregnancy,"D50.9, D52.9, O99.0",llm_knowledge,WHO ATC/DDD Index,FALSE,from_local_ATC_database
