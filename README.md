@@ -201,7 +201,7 @@ python scripts/build_atc_database.py --medications data/medications_synthetic_sh
 **Test the QC evaluation:**
 ```bash
 # Use as input the output of the 2 agent pipeline to run the QC evaluation  (via python code orchestration)
-python -c "from scripts.demo_qc_evaluator2 import evaluate_qc; evaluate_qc()"
+python -c "from scripts.demo_qc_evaluator import evaluate_qc; evaluate_qc()"
 
 # Bypass the 2 agent pipeline. Instead, start with the medications input file to run a QC evaluator agent via a single prompt! 
 # To run on 5 medications:
