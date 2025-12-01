@@ -28,6 +28,7 @@ import pandas as pd
 from datetime import datetime
 import csv
 import re
+import logging
 from typing import Dict, List
 
 # Add parent directory to path
@@ -39,9 +40,13 @@ from agents.qc_evaluator import (
     close_qc_session
 )
 from dotenv import load_dotenv
-from config import TEST_MEDICATIONS_FILE, TEST_CONDITIONS_FILE, OUTPUT_DIR
+from config import TEST_MEDICATIONS_FILE, TEST_CONDITIONS_FILE, TEST_DRUG_NAMES_FILE, OUTPUT_DIR
 
 load_dotenv()
+
+# Suppress verbose logging from Google API and httpx
+logging.getLogger('google_genai').setLevel(logging.WARNING)
+logging.getLogger('httpx').setLevel(logging.WARNING)
 
 
 def extract_medication_data(row: pd.Series) -> dict:
@@ -560,40 +565,58 @@ Response format: ["CODE1", "CODE2", ...]"""
         return []
 
 
-def extract_drug_name_regex(drug_description: str) -> str:
+def load_drug_name_mappings(drug_names_file: str) -> dict:
     """
-    Extract drug name from description using simple regex patterns.
+    Load drug name mappings from the drug_identifier agent output.
+    
+    Args:
+        drug_names_file: Path to drug_names_extracted CSV file
+        
+    Returns:
+        Dictionary mapping drug_description -> drug_name
+    """
+    drug_names_df = pd.read_csv(drug_names_file)
+    
+    # Create lookup dictionary
+    mapping = {}
+    for _, row in drug_names_df.iterrows():
+        description = row['drug_description'].strip()
+        drug_name = row['drug_name'].strip()
+        mapping[description] = drug_name
+    
+    return mapping
+
+
+def extract_drug_name(drug_description: str, drug_name_mappings: dict) -> str:
+    """
+    Extract drug name from description using pre-computed mappings from drug_identifier agent.
     
     Args:
         drug_description: Full drug description
+        drug_name_mappings: Dictionary from load_drug_name_mappings()
         
     Returns:
-        Extracted drug name
+        Extracted drug name, or original description if not found
     """
-    import re
+    # Direct lookup
+    if drug_description in drug_name_mappings:
+        return drug_name_mappings[drug_description]
     
-    # Remove dosage information
-    # Pattern: number + MG/ML/ACTUAT etc.
-    description = re.sub(r'\d+(\.\d+)?\s*(MG|ML|ACTUAT|MCG|G|%)', '', drug_description, flags=re.IGNORECASE)
+    # Case-insensitive fallback
+    description_lower = drug_description.lower()
+    for desc, name in drug_name_mappings.items():
+        if desc.lower() == description_lower:
+            return name
     
-    # Remove formulation
-    formulations = ['Oral Tablet', 'Oral Capsule', 'Oral Solution', 'Topical Cream', 
-                   'Metered Dose Inhaler', 'Auto-Injector', 'Chewable Tablet', 'Extended Release']
-    for formulation in formulations:
-        description = description.replace(formulation, '')
-    
-    # Clean up
-    description = description.strip()
-    description = re.sub(r'\s+', ' ', description)  # Normalize whitespace
-    description = description.split()[0] if description else drug_description
-    
-    return description
+    # Not found - return first word as fallback (original behavior)
+    return drug_description.split()[0] if drug_description else drug_description
 
 
 def evaluate_medications(
     medications_file: str,
     conditions_file: str,
-    drug_classifications_file: str,
+    drug_names_file: str,
+    atc_database_file: str,
     output_file: str = "output/qc_flags.csv"
 ) -> pd.DataFrame:
     """
@@ -603,7 +626,8 @@ def evaluate_medications(
     Args:
         medications_file: Path to medications CSV
         conditions_file: Path to conditions CSV
-        drug_classifications_file: Path to drug classifications CSV (output from drug_classifier)
+        drug_names_file: Path to drug names CSV (output from drug_identifier)
+        atc_database_file: Path to ATC database JSON with ICD-10 ranges
         output_file: Path to output QC flags CSV
         
     Returns:
@@ -614,48 +638,53 @@ def evaluate_medications(
     print(f"Starting QC evaluation")
     print(f"📥 Medications: {medications_file}")
     print(f"📥 Conditions: {conditions_file}")
-    print(f"📥 Classifications: {drug_classifications_file}")
+    print(f"📥 Drug Names: {drug_names_file}")
+    print(f"📥 ATC Database: {atc_database_file}")
     print(f"📤 Output: {output_file}")
     
     # Load data
     medications_df = pd.read_csv(medications_file)
     conditions_df = pd.read_csv(conditions_file)
-    classifications_df = pd.read_csv(drug_classifications_file)
+    drug_name_mappings = load_drug_name_mappings(drug_names_file)
+    
+    # Load ATC database JSON with ICD-10 ranges
+    with open(atc_database_file, 'r') as f:
+        atc_database = json.load(f)
     
     # Normalize column names to lowercase for consistency
     medications_df.columns = medications_df.columns.str.lower()
     conditions_df.columns = conditions_df.columns.str.lower()
     
-    # Convert classifications to dictionary for fast lookup
+    # Convert ATC database to lookup dictionary
     drug_lookup = {}
-    for _, row in classifications_df.iterrows():
-        drug_name = row['drug_name'].lower().strip()
-        # Parse icd10_codes - it may be JSON string or comma-separated
-        icd10_codes_raw = row.get('icd10_codes', '')
-        if isinstance(icd10_codes_raw, str):
-            # Try parsing as JSON first
-            try:
-                icd10_codes = json.loads(icd10_codes_raw)
-            except:
-                # Fall back to comma-separated
-                icd10_codes = [code.strip() for code in icd10_codes_raw.split(',') if code.strip()]
-        else:
-            icd10_codes = []
+    for drug_key, drug_info in atc_database.items():
+        drug_name = drug_info.get('drug_name', drug_key).lower().strip()
         
         drug_lookup[drug_name] = {
-            'code': row.get('atc_code', 'UNKNOWN'),
-            'drug_class': row.get('atc_class', 'Unknown'),
-            'indication': row.get('indication', ''),
-            'icd10_codes': icd10_codes,
-            'indication_icd10_ranges': []  # Not in CSV format
+            'code': drug_info.get('code', 'UNKNOWN'),
+            'drug_class': drug_info.get('drug_class', 'Unknown'),
+            'indication': drug_info.get('indication', ''),
+            'icd10_codes': drug_info.get('icd10_codes', []),
+            'indication_icd10_ranges': drug_info.get('indication_icd10_ranges', [])
         }
     
     print(f"📊 Loaded {len(medications_df)} medication records")
     print(f"📊 Loaded {len(conditions_df)} condition records")
+    print(f"📊 Loaded {len(drug_name_mappings)} drug name mappings")
     print(f"📊 Loaded {len(drug_lookup)} drug classifications")
     
-    # Results list
-    qc_results = []
+    # Prepare output file - delete existing and write header
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
+    header_written = False
+    if os.path.exists(output_file):
+        os.remove(output_file)
+        print(f"🗑️  Deleted existing output file: {output_file}")
+    
+    # Statistics counters
+    total_processed = 0
+    passed_count = 0
+    failed_count = 0
+    unknown_count = 0
     
     # Process each medication record
     for idx, med_row in medications_df.iterrows():
@@ -663,14 +692,21 @@ def evaluate_medications(
         encounter_id = med_row['encounter']
         drug_description = med_row['description']
         
-        # Extract drug name
-        drug_name = extract_drug_name_regex(drug_description)
+        # Extract drug name using pre-computed mappings from drug_identifier agent
+        drug_name = extract_drug_name(drug_description, drug_name_mappings)
         drug_key = drug_name.lower().strip()
+        
+        print(f"\n{'='*80}")
+        print(f"🔍 Processing Medication #{idx+1}/{len(medications_df)}")
+        print(f"   Drug Name: {drug_name}")
+        print(f"   Prescription: {drug_description}")
         
         # Get drug classification data
         if drug_key not in drug_lookup:
-            print(f"⚠️  Drug not in classifications: {drug_name}")
-            qc_results.append({
+            print(f"   ⚠️  Status: Drug not in classifications database")
+            
+            # Write result immediately
+            result_row = {
                 'patient_id': patient_id,
                 'encounter_id': encounter_id,
                 'drug_name': drug_name,
@@ -684,7 +720,18 @@ def evaluate_medications(
                 'match_type': 'none',
                 'matched_codes': '',
                 'reason': ''
-            })
+            }
+            
+            # Append to CSV file
+            result_df = pd.DataFrame([result_row])
+            if not header_written:
+                result_df.to_csv(output_file, mode='w', index=False, header=True)
+                header_written = True
+            else:
+                result_df.to_csv(output_file, mode='a', index=False, header=False)
+            
+            total_processed += 1
+            unknown_count += 1
             continue
         
         drug_data = drug_lookup[drug_key]
@@ -725,11 +772,30 @@ def evaluate_medications(
                 )
             }
         
+        # Display condition information
+        print(f"   Condition Info:")
+        if med_row.get('reasondescription'):
+            print(f"      - Medication reason: {med_row.get('reasondescription', '')} (SNOMED: {med_row.get('reasoncode', '')})")
+        if med_row.get('encounter.reasondescription'):
+            print(f"      - Encounter reason: {med_row.get('encounter.reasondescription', '')} (SNOMED: {med_row.get('encounter.reasoncode', '')})")
+        if not encounter_conditions.empty:
+            first_cond = encounter_conditions.iloc[0]
+            if first_cond.get('condition_description'):
+                print(f"      - Condition record: {first_cond.get('condition_description', '')} (SNOMED: {first_cond.get('code', '')})")
+        
         # Map SNOMED CT to ICD-10 codes using LLM
         actual_codes = map_snomed_to_icd10(med_data, cond_data)
         
+        # Display actual mapped codes
         if actual_codes:
-            print(f"    📝 Mapped {len(actual_codes)} ICD-10 codes: {actual_codes}")
+            print(f"   📝 Actual ICD-10 codes: {actual_codes}")
+        else:
+            print(f"   📝 Actual ICD-10 codes: NONE")
+        
+        # Display expected codes and ranges from drug classification
+        print(f"   Expected ICD-10 codes: {expected_codes}")
+        if expected_ranges:
+            print(f"   Expected ICD-10 ranges: {expected_ranges}")
         
         # Check for match using core tool function
         match_result = check_diagnosis_match_tool(
@@ -738,8 +804,19 @@ def evaluate_medications(
             actual_codes
         )
         
-        # Record result
-        qc_results.append({
+        # Display result
+        if match_result['status'] == 'PASS':
+            print(f"   ✅ Result: PASS - Diagnosis matches drug indication")
+            if match_result.get('matched_codes'):
+                print(f"      Matched codes: {match_result['matched_codes']}")
+            passed_count += 1
+        else:
+            actual_codes_display = actual_codes if actual_codes else []
+            print(f"   ❌ Result: FAIL - No matching diagnosis found : actual_icd10_codes:{actual_codes_display}")
+            failed_count += 1
+        
+        # Record result and write immediately to CSV
+        result_row = {
             'patient_id': patient_id,
             'encounter_id': encounter_id,
             'drug_name': drug_name,
@@ -753,57 +830,70 @@ def evaluate_medications(
             'match_type': match_result['match_type'],
             'matched_codes': str(match_result['matched_codes']),
             'reason': ''
-        })
-    
-    # Create DataFrame
-    results_df = pd.DataFrame(qc_results)
-    
-    # Save to CSV
-    os.makedirs(os.path.dirname(output_file), exist_ok=True)
-    results_df.to_csv(output_file, index=False)
+        }
+        
+        # Append to CSV file
+        result_df = pd.DataFrame([result_row])
+        if not header_written:
+            result_df.to_csv(output_file, mode='w', index=False, header=True)
+            header_written = True
+        else:
+            result_df.to_csv(output_file, mode='a', index=False, header=False)
+        
+        total_processed += 1
     
     # Summary statistics
-    total = len(results_df)
-    passed = len(results_df[results_df['status'] == 'PASS'])
-    failed = len(results_df[results_df['status'] == 'FAIL'])
-    unknown = len(results_df[results_df['status'] == 'UNKNOWN_DRUG'])
-    
     print(f"\n{'='*70}")
     print(f"✅ QC EVALUATION COMPLETE")
     print(f"{'='*70}")
-    print(f"📊 Total medications evaluated: {total}")
-    print(f"✅ PASS (matching diagnosis): {passed} ({passed/total*100:.1f}%)")
-    print(f"❌ FAIL (no matching diagnosis): {failed} ({failed/total*100:.1f}%)")
-    print(f"⚠️  UNKNOWN (drug not in database): {unknown}")
+    print(f"📊 Total medications evaluated: {total_processed}")
+    print(f"✅ PASS (matching diagnosis): {passed_count} ({passed_count/total_processed*100:.1f}%)")
+    print(f"❌ FAIL (no matching diagnosis): {failed_count} ({failed_count/total_processed*100:.1f}%)")
+    print(f"⚠️  UNKNOWN (drug not in database): {unknown_count}")
     print(f"📤 Results saved to: {output_file}\n")
     
+    # Load and return the complete results
+    results_df = pd.read_csv(output_file)
     return results_df
 
 
 def evaluate_qc(
     medications_file: str = None,
     conditions_file: str = None,
-    drug_classifications_file: str = None,
+    drug_names_file: str = None,
+    atc_database_file: str = None,
     output_file: str = None
 ) -> pd.DataFrame:
     """
     Main entry point for non-agent QC evaluation (Python + LLM API).
+    Uses pre-extracted drug names and ATC database with ICD-10 ranges.
     
     Args:
         medications_file: Path to medications CSV (default: from config.py)
         conditions_file: Path to conditions CSV (default: from config.py)
-        drug_classifications_file: Path to drug classifications CSV (default: from config.py)
+        drug_names_file: Path to drug names CSV from drug_identifier agent (default: from config.py)
+        atc_database_file: Path to ATC database JSON with ICD-10 ranges (default: from config.py)
         output_file: Path to output QC flags CSV (default: from config.py)
         
     Returns:
         DataFrame with QC evaluation results
     """
-    from config import QC_FLAGS_OUTPUT, TEST_DRUG_CLASSIFICATIONS_FILE
+    from config import QC_FLAGS_OUTPUT, TEST_DRUG_NAMES_FILE, ATC_DATABASE_PATH
+    from pathlib import Path
     
     # Use config defaults if not specified
     medications_file = medications_file or TEST_MEDICATIONS_FILE
     conditions_file = conditions_file or TEST_CONDITIONS_FILE
-    drug_classifications_file = drug_classifications_file or TEST_DRUG_CLASSIFICATIONS_FILE
+    drug_names_file = drug_names_file or TEST_DRUG_NAMES_FILE
+    
+    # Use examples/atc_database.json if exists, otherwise output/atc_database.json
+    if atc_database_file is None:
+        examples_atc = Path("examples/atc_database.json")
+        if examples_atc.exists():
+            atc_database_file = str(examples_atc)
+        else:
+            atc_database_file = ATC_DATABASE_PATH
+    
     output_file = output_file or QC_FLAGS_OUTPUT
     
     print("\n" + "="*70)
@@ -814,7 +904,8 @@ def evaluate_qc(
     results = evaluate_medications(
         medications_file=medications_file,
         conditions_file=conditions_file,
-        drug_classifications_file=drug_classifications_file,
+        drug_names_file=drug_names_file,
+        atc_database_file=atc_database_file,
         output_file=output_file
     )
     
