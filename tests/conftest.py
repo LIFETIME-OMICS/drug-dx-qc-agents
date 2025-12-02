@@ -26,11 +26,14 @@ def pytest_addoption(parser):
 # ============================================================================
 
 TEST_DIR = Path(__file__).parent
+# Project root directory
+PROJECT_ROOT = TEST_DIR.parent
 
 # TEST 1
 # Test1: Original 3-patient test data with baselines
 INPUT_DIR = TEST_DIR / "test1" / "input1"
 BASELINE_DIR = TEST_DIR / "test1" / "baseline1"
+EXAMPLE_DIR = PROJECT_ROOT / "examples"
 
 # Test input files (test1)
 TEST_INPUT_FILES = {
@@ -42,7 +45,7 @@ TEST_INPUT_FILES = {
 BASELINE_FILES = {
     'drug_classifications': BASELINE_DIR / "baseline_test_drug_classifications.csv",
     'drug_names_extracted': BASELINE_DIR / "baseline_test_drug_names_extracted.csv",
-    'atc_database': BASELINE_DIR / "baseline_atc_database.json",
+    'atc_database': EXAMPLE_DIR / "baseline_atc_database.json",
     'test_atc_database': BASELINE_DIR / "baseline_test_atc_database.json",
     'qc_flags_test': BASELINE_DIR / "baseline_qc_flags_test.csv"
 }
