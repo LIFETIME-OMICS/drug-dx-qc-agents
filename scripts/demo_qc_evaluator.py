@@ -29,6 +29,8 @@ from datetime import datetime
 import csv
 import re
 import logging
+import time
+import random
 from typing import Dict, List
 
 # Add parent directory to path
@@ -246,10 +248,35 @@ async def main():
             else:
                 print(f"         No matching condition found")
             
+            # Retry logic for API quota limits
+            max_retries = 5
+            base_delay = 10
+            result_csv = None
+            
+            for attempt in range(max_retries):
+                try:
+                    # Evaluate this medication
+                    result_csv = await evaluate_medication(session_id, med_data, condition_data)
+                    break # Success
+                except Exception as e:
+                    error_str = str(e)
+                    if "RESOURCE_EXHAUSTED" in error_str or "429" in error_str:
+                        if attempt < max_retries - 1:
+                            wait_time = base_delay * (2 ** attempt) + random.uniform(0, 1)
+                            print(f"         ⚠ Quota exceeded. Retrying in {wait_time:.1f}s... (Attempt {attempt+1}/{max_retries})")
+                            await asyncio.sleep(wait_time)
+                        else:
+                            print(f"         ✗ Error: Quota exceeded after {max_retries} retries.")
+                            errors += 1
+                    else:
+                        print(f"         ✗ Error: {e}")
+                        errors += 1
+                        break # Don't retry other errors
+
+            if not result_csv:
+                continue
+
             try:
-                # Evaluate this medication
-                result_csv = await evaluate_medication(session_id, med_data, condition_data)
-                
                 # Clean up the result (remove markdown code blocks if present)
                 result_csv = result_csv.strip()
                 if result_csv.startswith('```'):
@@ -293,14 +320,18 @@ async def main():
                 else:
                     print(f"         ⚠ Empty result from agent")
                     errors += 1
-                    
             except Exception as e:
-                print(f"         ✗ Error: {e}")
+                print(f"         ✗ Error processing result: {e}")
                 errors += 1
             
-            # Small delay between evaluations
-            await asyncio.sleep(0.5)
-        
+            # Add a small delay between requests to be polite to the API
+            await asyncio.sleep(1)
+            
+    except Exception as e:
+        print(f"         ✗ Error: {e}")
+        errors += 1
+    
+    finally:
         print("\n" + "="*80)
         print("PROCESSING COMPLETE")
         print("="*80)
@@ -329,7 +360,6 @@ async def main():
                 memory_reused = results_df['reason'].astype(str).str.contains('REUSED FROM MEMORY', case=False, na=False).sum()
                 print(f"   - Drug mappings reused from memory: {memory_reused}")
         
-    finally:
         # Clean up session
         print(f"\nClosing session: {session_id}")
         await close_qc_session(session_id)
