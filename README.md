@@ -208,7 +208,9 @@ python scripts/build_atc_database.py --medications data/medications_synthetic_sh
 python -c "from scripts.demo_qc_evaluator import evaluate_qc; evaluate_qc()"
 
 # Bypass the 2 agent pipeline! 
-# Instead, start with the medications and conditions input files to run a QC evaluator agent via a single prompt! 
+# Instead, start with the medications and conditions input files to run a QC evaluator agent via a single prompt!
+# Updated Test: We removed the batch qc_evaluator test as the LLM was inconsistent with the use of file I/O tools.
+#               We are now calling the InMemorySessionService agent with one medication + conditon/diagnosis at a time    
 # To run on 5 medications:
 python scripts/demo_qc_evaluator.py --limit 5
 

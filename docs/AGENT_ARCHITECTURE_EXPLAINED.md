@@ -4,16 +4,19 @@
 
 This project uses a **4-agent system** for drug-diagnosis quality control with two architectural patterns:
 
-**Batch Processing Pipeline** (3 agents, stateless):
+**QC Processing Pipeline** (2 stateless agents + 1 stateful agent ):
 ```
 medications.csv → Drug Identifier → drug_names.csv → Drug Classifier → classifications.csv + atc_database.json
                                                             ↓
-                                      diagnoses.csv → QC Evaluator → qc_flags.csv
+                                      conditions.csv → QC Evaluator → qc_flags.csv
+
+medications.csv  + conditions.csv → QC Evaluator (SessionService) → qc_flags.csv (LLM_version)
+
 ```
 
-**Interactive Analysis** (1 agent, stateful):
+**Interactive Analysis** (stateful agent):
 ```
-classifications.csv + diagnoses.csv + qc_flags.csv → Stats Summarizer (SessionService) → Interactive queries, charts
+classifications.csv + conditions.csv + qc_flags.csv → Stats Summarizer (SessionService) → Interactive queries, charts
 ```
 
 ---
@@ -72,7 +75,7 @@ metformin
 
 **Input**: 
 - `medications.csv` (with SNOMED codes)
-- `diagnoses.csv` (patient conditions)
+- `conditions.csv` (patient conditions)
 
 **Process**:
 1. Match patient medications to diagnoses
@@ -93,7 +96,7 @@ metformin
 
 **Input**:
 - `drug_classifications.csv`
-- `diagnoses.csv`
+- `conditions.csv`
 - `qc_flags.csv` 
 
 **Process**:
@@ -215,12 +218,7 @@ amlodipine
 ### Batch Processing Pipeline (Agents 1-3)
 
 ```bash
-# Run tests to generate processed data
-pytest tests/test_drug_identifier.py -v
-pytest tests/test_drug_classifier.py -v  
-pytest tests/test_qc_evaluator.py -v
-
-# Or build ATC database from scratch
+#  Build ATC database from scratch which uses agents -12
 python scripts/build_atc_database.py --medications tests/input1/medications_test.csv
 ```
 
@@ -228,7 +226,7 @@ python scripts/build_atc_database.py --medications tests/input1/medications_test
 1. Agent 1 extracts drug names
 2. Agent 2 classifies to ATC codes with ICD-10 enrichment
 3. Agent 3 validates drug-diagnosis alignment
-4. Output files saved to `tests/tmp/`
+4. Output files saved to `output`
 
 ### Interactive Analysis (Agent 4)
 
@@ -236,8 +234,6 @@ python scripts/build_atc_database.py --medications tests/input1/medications_test
 # Run demo
 python scripts/demo_stats_summarizer.py
 
-# Or test interactively
-pytest tests/test_stats_summarizer_session.py -v
 ```
 
 **What happens**:
@@ -281,13 +277,13 @@ pytest tests/test_stats_summarizer_session.py -v
 
 ## Two Architectural Patterns
 
-### Pattern 1: InMemoryRunner (Agents 1-3)
+### Pattern 1: InMemoryRunner (Agents 1-2)
 - **Stateless**: Each task is independent
 - **Single-turn**: One input → One output
 - **Efficient**: Perfect for batch processing
 - **Use when**: Predictable, repeatable tasks
 
-### Pattern 2: SessionService (Agent 4)
+### Pattern 2: SessionService (Agent 3,4)
 - **Stateful**: Maintains conversation history
 - **Multi-turn**: Ask follow-up questions
 - **Interactive**: Exploratory analysis

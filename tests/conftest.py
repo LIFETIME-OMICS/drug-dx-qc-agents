@@ -60,13 +60,16 @@ TEST_INPUT_FILES_TEST2 = {
 }
 
 BASELINE_FILES_TEST2 = {
-    'qc_flags': BASELINE_DIR_TEST2 / "baseline_qc_flags_agent_orchestration_19.csv"
+    'qc_flags': BASELINE_DIR_TEST2 / "baseline_qc_flags_agent_orchestration_19.csv",
+    'drug_classifications': BASELINE_DIR_TEST2 / "baseline_drug_classifications_short.csv",
+    'drug_names_extracted': BASELINE_DIR_TEST2 / "baseline_drug_names_extracted_short.csv"
 }
 
 # Test output file paths
 TEST_OUTPUT_FILES = {
     'qc_flags_agent_orchestration': TMP_DIR_TEST / "qc_flags_agent_orchestration.csv",
-    'qc_flags_test': TMP_DIR_TEST / "qc_flags_test.csv"
+    'qc_flags_test': TMP_DIR_TEST / "qc_flags_test.csv",
+    'out_drug_classification': TMP_DIR_TEST / "drug_classification.csv"
 }
 
 # Batch processing configuration (for test_qc_evaluator2.py batch tests)
@@ -98,6 +101,25 @@ def test_input_files_test2():
 def baseline_files():
     """Provide baseline file paths to tests (test1 only)."""
     return BASELINE_FILES
+
+
+@pytest.fixture
+def baseline_files_test2():
+    """Provide baseline file paths for test2 (8-patient dataset)."""
+    return BASELINE_FILES_TEST2
+
+
+@pytest.fixture(params=[
+    ('amlodipine', False, 3),  # (drug_name, skip_cache, min_expected_formulations)
+    ('fluticasone', True, 3),  # Force re-fetch for fluticasone to test multi-formulation
+])
+def test_drug_params(request):
+    """Provide drug test parameters: (name, skip_cache, min_formulations)."""
+    return {
+        'drug_name': request.param[0],
+        'skip_cache': request.param[1],
+        'min_formulations': request.param[2]
+    }
 
 
 @pytest.fixture(scope="session")

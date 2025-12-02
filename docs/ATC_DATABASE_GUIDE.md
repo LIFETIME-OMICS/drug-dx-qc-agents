@@ -250,10 +250,10 @@ with open('data/atc_database.json', 'w') as f:
 
 ```bash
 # Backup current database
-cp data/atc_database.json data/atc_database.backup.json
+cp output/atc_database.json output/atc_database.backup.json
 
 # Delete current database
-rm data/atc_database.json
+rm output/atc_database.json
 
 # Rebuild from medications file
 python scripts/build_atc_database.py --medications data/medications_synthetic.csv
@@ -261,7 +261,7 @@ python scripts/build_atc_database.py --medications data/medications_synthetic.cs
 
 ## Data Source
 
-**Primary:** Local JSON database (`data/atc_database.json`)  
+**Primary:** Local JSON database (`output/atc_database.json`)  
 **Secondary:** WHO ATC/DDD Index (https://atcddd.fhi.no/atc_ddd_index/)  
 **Fallback:** Hardcoded cache for common drugs  
 
@@ -333,4 +333,4 @@ Potential improvements for later:
 
 ---
 
-**Questions or issues?** See `planning/agents_implementation_plan.md` for technical details.
+

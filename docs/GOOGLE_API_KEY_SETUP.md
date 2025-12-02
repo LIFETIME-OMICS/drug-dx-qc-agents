@@ -122,7 +122,7 @@ This will:
 | `gemini-2.5-pro` | ✅ Works | Good | Slower | Highest |
 | `gemini-2.0-flash-exp` | ⚠️ Limited quota | Very limited | Fast | High |
 
-**Default**: All agents use `gemini-2.5-flash`
+**Default**: All agents use `gemini-2.5-flash` or DEFAULT_MODEL from config.py
 
 ## Free Tier Limits (as of 2025)
 

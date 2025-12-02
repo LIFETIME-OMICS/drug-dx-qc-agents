@@ -29,6 +29,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agents.drug_identifier import process_medications_file
 from agents.drug_classifier import process_drug_names_file
+from config import DEFAULT_MODEL
 
 
 def build_atc_database(
@@ -82,7 +83,7 @@ def build_atc_database(
                 input_file=medications_file,
                 output_file=extracted_file_temp,
                 error_log=identifier_log,
-                model="gemini-2.5-flash"
+                model=DEFAULT_MODEL
             ))
             
             print(f"\n✅ Agent 1 complete: {len(df_extracted)} drugs extracted")
@@ -102,7 +103,7 @@ def build_atc_database(
             input_file=extracted_file_temp,
             output_file=classified_file,
             error_log=classifier_log,
-            model="gemini-2.5-flash",
+            model=DEFAULT_MODEL,
             update=update_mode
         )
         

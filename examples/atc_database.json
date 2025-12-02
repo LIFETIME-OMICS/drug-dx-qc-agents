@@ -1,13 +1,13 @@
 {
   "amlodipine": {
-    "code": "C08CA01",
+    "code": "C08CA01|C08CA51|C08GA02",
     "drug_name": "amlodipine",
-    "who_name": "amlodipine",
-    "drug_class": "Dihydropyridine derivatives",
-    "drug_classcode": "C08CA",
+    "who_name": "amlodipine|amlodipine and celecoxib|amlodipine and diuretics",
+    "drug_class": "Dihydropyridine derivatives|Calcium channel blockers and diuretics",
+    "drug_classcode": "C08CA|C08GA",
     "therapeutic_category": "CALCIUM CHANNEL BLOCKERS",
     "anatomical_group": "C",
-    "indication": "Hypertension/Angina pectoris",
+    "indication": "Essential Hypertension/Chronic stable angina pectoris/Vasospastic angina|Essential Hypertension",
     "icd10_codes": [
       "I10",
       "I20.9"
@@ -22,38 +22,37 @@
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:37:31.294754"
+    "fetched_date": "2025-12-01T16:14:52.060279"
   },
   "lisinopril": {
-    "code": "C09AA03",
+    "code": "C09AA03|C09BB03|C09BA03",
     "drug_name": "lisinopril",
-    "who_name": "lisinopril",
-    "drug_class": "ACE inhibitors, plain",
-    "drug_classcode": "C09AA",
+    "who_name": "lisinopril|lisinopril and amlodipine|lisinopril and diuretics",
+    "drug_class": "ACE inhibitors, plain|ACE inhibitors and calcium channel blockers|ACE inhibitors and diuretics",
+    "drug_classcode": "C09AA|C09BB|C09BA",
     "therapeutic_category": "AGENTS ACTING ON THE RENIN-ANGIOTENSIN SYSTEM",
     "anatomical_group": "C",
-    "indication": "Hypertension/Heart failure/Chronic ischemic heart disease/Diabetic nephropathy",
+    "indication": "Hypertension/Congestive heart failure/Post-myocardial infarction|Hypertension/Angina pectoris|Hypertension/Congestive heart failure",
     "icd10_codes": [
       "I10",
-      "I50.9",
-      "I25.9",
-      "E11.22"
+      "I50.0",
+      "I25.2",
+      "I20.9"
     ],
     "icd10_descriptions": {
       "I10": "Essential (primary) hypertension",
-      "I50.9": "Heart failure, unspecified",
-      "I25.9": "Chronic ischemic heart disease, unspecified",
-      "E11.22": "Type 2 diabetes mellitus with diabetic nephropathy"
+      "I50.0": "Congestive heart failure",
+      "I25.2": "Old myocardial infarction",
+      "I20.9": "Angina pectoris, unspecified"
     },
     "indication_icd10_ranges": [
       "I10-I15",
       "I50-I52",
-      "I20-I25",
-      "E10-E14"
+      "I20-I25"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:37:46.230404"
+    "fetched_date": "2025-12-01T16:17:25.933471"
   },
   "loratadine": {
     "code": "R06AX13",
@@ -63,236 +62,426 @@
     "drug_classcode": "R06AX",
     "therapeutic_category": "ANTIHISTAMINES FOR SYSTEMIC USE",
     "anatomical_group": "R",
-    "indication": "Allergic rhinitis/Urticaria",
+    "indication": "Allergic rhinitis/Urticaria/Pruritus",
     "icd10_codes": [
       "J30.4",
-      "L50.9"
+      "L50.1",
+      "L29.9"
     ],
     "icd10_descriptions": {
       "J30.4": "Allergic rhinitis, unspecified",
-      "L50.9": "Urticaria, unspecified"
+      "L50.1": "Idiopathic urticaria",
+      "L29.9": "Pruritus, unspecified"
     },
     "indication_icd10_ranges": [
       "J30-J39",
-      "L50-L54"
+      "L50-L54",
+      "L20-L30"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:37:57.889252"
+    "fetched_date": "2025-12-01T16:15:07.419837"
   },
   "epinephrine": {
-    "code": "A01AD01",
+    "code": "A01AD01|B02BC09|C01CA24|R01AA14|R03AA01|S01EA01|R03AK01|S01EA51",
     "drug_name": "epinephrine",
-    "who_name": "epinephrine",
-    "drug_class": "Other agents for local oral treatment",
-    "drug_classcode": "A01AD",
-    "therapeutic_category": "STOMATOLOGICAL PREPARATIONS",
-    "anatomical_group": "A",
-    "indication": "Anaphylactic shock/Cardiac arrest",
+    "who_name": "epinephrine|epinephrine and other drugs for obstructive airway diseases|epinephrine, combinations",
+    "drug_class": "Other agents for local oral treatment|Local hemostatics|Adrenergic and dopaminergic agents|Sympathomimetics, plain|Alpha- and beta-adrenoreceptor agonists|Sympathomimetics in glaucoma therapy|Adrenergics in combination with corticosteroids or other drugs, excl. anticholinergics",
+    "drug_classcode": "A01AD|B02BC|C01CA|R01AA|R03AA|S01EA|R03AK",
+    "therapeutic_category": "STOMATOLOGICAL PREPARATIONS|ANTIHEMORRHAGICS|CARDIAC THERAPY|NASAL PREPARATIONS|DRUGS FOR OBSTRUCTIVE AIRWAY DISEASES|OPHTHALMOLOGICALS",
+    "anatomical_group": "A|B|C|R|S",
+    "indication": "Local hemostasis/Bleeding control during surgical/dental procedures|Anaphylactic shock/Cardiac arrest/Circulatory shock (e.g., cardiogenic, septic)|Nasal congestion/Rhinitis|Acute bronchospasm (e.g., asthma exacerbations/COPD exacerbations)/Severe allergic reactions|Open-angle glaucoma",
     "icd10_codes": [
+      "T81.0",
+      "R58",
       "T78.2",
-      "I46.9"
+      "I46.9",
+      "R57.0",
+      "R57.2",
+      "J30.0",
+      "J30.4",
+      "J45.9",
+      "J44.9",
+      "H40.10"
     ],
     "icd10_descriptions": {
+      "T81.0": "Hemorrhage and hematoma complicating a procedure, not elsewhere classified",
+      "R58": "Hemorrhage, not elsewhere classified",
       "T78.2": "Anaphylactic shock, unspecified",
-      "I46.9": "Cardiac arrest, unspecified"
+      "I46.9": "Cardiac arrest, unspecified",
+      "R57.0": "Cardiogenic shock",
+      "R57.2": "Septic shock",
+      "J30.0": "Vasomotor rhinitis",
+      "J30.4": "Allergic rhinitis, unspecified",
+      "J45.9": "Asthma, unspecified",
+      "J44.9": "Chronic obstructive pulmonary disease, unspecified",
+      "H40.10": "Primary open-angle glaucoma, unspecified eye"
     },
     "indication_icd10_ranges": [
-      "T78.0-T78.9",
-      "I46.0-I46.9"
+      "T80-T88",
+      "R50-R69",
+      "T70-T78",
+      "I40-I47",
+      "J30-J39",
+      "J40-J47",
+      "H40-H42"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:38:19.179976"
+    "fetched_date": "2025-12-01T16:16:04.869680"
   },
   "fluticasone propionate": {
-    "code": "D07AC17",
+    "code": "D07AC17|R01AD08|R03BA05|R01AD12|R03BA09|R01AD58",
     "drug_name": "fluticasone propionate",
-    "who_name": "fluticasone",
-    "drug_class": "Corticosteroids, potent (group III)",
-    "drug_classcode": "D07AC",
-    "therapeutic_category": "CORTICOSTEROIDS, DERMATOLOGICAL PREPARATIONS",
-    "anatomical_group": "D",
-    "indication": "Atopic dermatitis/Psoriasis",
+    "who_name": "fluticasone|fluticasone furoate|fluticasone, combinations",
+    "drug_class": "Corticosteroids, potent (group III)|Corticosteroids|Glucocorticoids",
+    "drug_classcode": "D07AC|R01AD|R03BA",
+    "therapeutic_category": "CORTICOSTEROIDS, DERMATOLOGICAL PREPARATIONS|NASAL PREPARATIONS|DRUGS FOR OBSTRUCTIVE AIRWAY DISEASES",
+    "anatomical_group": "D|R",
+    "indication": "Atopic dermatitis/Psoriasis/Allergic rhinitis/Nasal polyps/Asthma/COPD",
     "icd10_codes": [
       "L20.9",
-      "L40.9"
+      "L40.9",
+      "J30.4",
+      "J33.9",
+      "J45.9",
+      "J44.9"
     ],
     "icd10_descriptions": {
       "L20.9": "Atopic dermatitis, unspecified",
-      "L40.9": "Psoriasis, unspecified"
+      "L40.9": "Psoriasis, unspecified",
+      "J30.4": "Allergic rhinitis, unspecified",
+      "J33.9": "Nasal polyp, unspecified",
+      "J45.9": "Asthma, unspecified",
+      "J44.9": "Chronic obstructive pulmonary disease, unspecified"
     },
     "indication_icd10_ranges": [
       "L20-L30",
-      "L40-L40"
+      "L40-L45",
+      "J30-J39",
+      "J40-J47"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:38:37.733541"
+    "fetched_date": "2025-12-01T16:05:31.131294"
   },
   "albuterol": {
-    "code": "R03AC02",
+    "code": "R03AC02|R03CC02|R03AK13|R03AK15|R03AL02|R03AK04",
     "drug_name": "albuterol",
-    "who_name": "salbutamol",
-    "drug_class": "Selective beta-2-adrenoreceptor agonists",
-    "drug_classcode": "R03AC",
+    "who_name": "salbutamol|salbutamol and beclometasone|salbutamol and budesonide|salbutamol and ipratropium bromide|salbutamol and sodium cromoglicate",
+    "drug_class": "Selective beta-2-adrenoreceptor agonists|Adrenergics in combination with corticosteroids or other drugs, excl. anticholinergics|Adrenergics in combination with anticholinergics incl. triple combinations with corticosteroids",
+    "drug_classcode": "R03AC|R03CC|R03AK|R03AL",
     "therapeutic_category": "DRUGS FOR OBSTRUCTIVE AIRWAY DISEASES",
     "anatomical_group": "R",
-    "indication": "Asthma/Chronic Obstructive Pulmonary Disease (COPD)/Bronchospasm",
+    "indication": "Acute bronchospasm/Asthma/COPD/Exercise-induced bronchospasm|Maintenance for persistent asthma/COPD|Moderate-to-severe COPD/Severe asthma|Prevention of allergic asthma/Exercise-induced asthma",
     "icd10_codes": [
-      "J45.909",
-      "J45.901",
+      "J98.01",
+      "J45.9",
       "J44.9",
-      "J44.1"
+      "J45.0"
     ],
     "icd10_descriptions": {
-      "J45.909": "Unspecified asthma, uncomplicated",
-      "J45.901": "Unspecified asthma with (acute) exacerbation",
+      "J98.01": "Acute bronchospasm",
+      "J45.9": "Asthma, unspecified",
       "J44.9": "Chronic obstructive pulmonary disease, unspecified",
-      "J44.1": "Chronic obstructive pulmonary disease with (acute) exacerbation"
+      "J45.0": "Predominantly allergic asthma"
     },
     "indication_icd10_ranges": [
       "J40-J47"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:38:54.425735"
+    "fetched_date": "2025-12-01T16:17:07.115954"
   },
   "ibuprofen": {
-    "code": "C01EB16",
+    "code": "C01EB16|G02CC01|M01AE01|M02AA13|R02AX02|M01AE51",
     "drug_name": "ibuprofen",
-    "who_name": "ibuprofen",
-    "drug_class": "Other cardiac preparations",
-    "drug_classcode": "C01EB",
-    "therapeutic_category": "CARDIAC THERAPY",
-    "anatomical_group": "C",
-    "indication": "Pain/Inflammation/Fever/Dysmenorrhea",
+    "who_name": "ibuprofen|ibuprofen, combinations",
+    "drug_class": "Other cardiac preparations|Antiinflammatory products for vaginal administration|Propionic acid derivatives|Antiinflammatory preparations, non-steroids for topical use|Other throat preparations",
+    "drug_classcode": "C01EB|G02CC|M01AE|M02AA|R02AX",
+    "therapeutic_category": "CARDIAC THERAPY|OTHER GYNECOLOGICALS|ANTIINFLAMMATORY AND ANTIRHEUMATIC PRODUCTS|TOPICAL PRODUCTS FOR JOINT AND MUSCULAR PAIN|THROAT PREPARATIONS",
+    "anatomical_group": "C|G|M|R",
+    "indication": "Acute pericarditis|Primary dysmenorrhoea/Pelvic pain/Vaginal inflammation|Pain/Fever/Rheumatoid arthritis/Osteoarthritis/Ankylosing spondylitis/Juvenile idiopathic arthritis/Gout flares/Headache/Dental pain/Dysmenorrhoea|Localized musculoskeletal pain/Soft tissue injuries/Sprains/Strains|Sore throat/Pharyngitis/Tonsillitis",
     "icd10_codes": [
+      "I30.1",
+      "I30.9",
+      "N94.4",
+      "N94.6",
+      "R10.2",
+      "N73.9",
       "R52.9",
       "R50.9",
+      "M05.9",
+      "M19.90",
+      "M45",
+      "M08.9",
+      "M10.9",
+      "R51",
+      "K08.81",
+      "M79.60",
       "M25.50",
-      "N94.6"
+      "M79.1",
+      "J02.9",
+      "J03.90",
+      "R07.0"
     ],
     "icd10_descriptions": {
-      "R52.9": "Unspecified pain",
+      "I30.1": "Acute nonrheumatic pericarditis",
+      "I30.9": "Acute pericarditis, unspecified",
+      "N94.4": "Primary dysmenorrhoea",
+      "N94.6": "Dysmenorrhoea, unspecified",
+      "R10.2": "Pelvic and perineal pain",
+      "N73.9": "Female pelvic inflammatory disease, unspecified",
+      "R52.9": "Pain, unspecified",
       "R50.9": "Fever, unspecified",
+      "M05.9": "Rheumatoid arthritis, unspecified",
+      "M19.90": "Osteoarthritis, unspecified, unspecified site",
+      "M45": "Ankylosing spondylitis",
+      "M08.9": "Juvenile arthritis, unspecified",
+      "M10.9": "Gout, unspecified",
+      "R51": "Headache",
+      "K08.81": "Toothache",
+      "M79.60": "Pain in limb, foot, hand, fingers, and toes, unspecified site",
       "M25.50": "Pain in unspecified joint",
-      "N94.6": "Dysmenorrhoea, unspecified"
+      "M79.1": "Myalgia",
+      "J02.9": "Acute pharyngitis, unspecified",
+      "J03.90": "Acute tonsillitis, unspecified",
+      "R07.0": "Pain in throat and chest"
     },
     "indication_icd10_ranges": [
+      "I30-I32",
+      "N70-N77",
+      "N94-N96",
       "R00-R99",
       "M00-M99",
-      "N00-N99"
+      "K00-K14",
+      "J00-J06"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:39:07.488172"
+    "fetched_date": "2025-12-01T16:18:10.638674"
   },
   "hydrocortisone": {
-    "code": "A01AC03",
+    "code": "A01AC03|A07EA02|C05AA01|D07AA02|D07XA01|H02AB09|S01BA02|S01CB03|S02BA01|D07AC16|D07CA01|S01CA03|S02CA03|S03CA04|D07BA04|S01BB01|D07AB11|D07AB02|D07BB04|R01AD60",
     "drug_name": "hydrocortisone",
-    "who_name": "hydrocortisone",
-    "drug_class": "Corticosteroids for local oral treatment",
-    "drug_classcode": "A01AC",
-    "therapeutic_category": "STOMATOLOGICAL PREPARATIONS",
-    "anatomical_group": "A",
-    "indication": "Aphthous stomatitis/Oral lichen planus",
+    "who_name": "hydrocortisone|hydrocortisone aceponate|hydrocortisone and antibiotics|hydrocortisone and antiinfectives|hydrocortisone and antiseptics|hydrocortisone and mydriatics|hydrocortisone buteprate|hydrocortisone butyrate|hydrocortisone butyrate and antiseptics|hydrocortisone, combinations",
+    "drug_class": "Corticosteroids for local oral treatment|Corticosteroids acting locally|Corticosteroids|Corticosteroids, weak (group I)|Corticosteroids, weak, other combinations|Glucocorticoids|Corticosteroids, plain|Corticosteroids/antiinfectives/mydriatics in combination|Corticosteroids, potent (group III)|Corticosteroids, weak, combinations with antibiotics|Corticosteroids and antiinfectives in combination|Corticosteroids, weak, combinations with antiseptics|Corticosteroids and mydriatics in combination|Corticosteroids, moderately potent (group II)|Corticosteroids, moderately potent, combinations with antiseptics",
+    "drug_classcode": "A01AC|A07EA|C05AA|D07AA|D07XA|H02AB|S01BA|S01CB|S02BA|D07AC|D07CA|S01CA|S02CA|S03CA|D07BA|S01BB|D07AB|D07BB|R01AD",
+    "therapeutic_category": "STOMATOLOGICAL PREPARATIONS|ANTIDIARRHEALS, INTESTINAL ANTIINFLAMMATORY/ANTIINFECTIVE AGENTS|VASOPROTECTIVES|CORTICOSTEROIDS, DERMATOLOGICAL PREPARATIONS|CORTICOSTEROIDS FOR SYSTEMIC USE|OPHTHALMOLOGICALS|OTOLOGICALS|OPHTHALMOLOGICAL AND OTOLOGICAL PREPARATIONS|NASAL PREPARATIONS",
+    "anatomical_group": "A|C|D|H|S|R",
+    "indication": "Oral aphthous ulcers/Stomatitis/Gingivitis|Inflammatory bowel disease (Ulcerative colitis/Crohn's disease)|Hemorrhoids/Pruritus ani/Anal inflammation|Asthma/COPD/Rheumatoid arthritis/Systemic lupus erythematosus/Adrenal insufficiency/Severe allergic reactions|Mild to moderate atopic dermatitis/Eczema/Psoriasis|Severe atopic dermatitis/Psoriasis/Lichen planus|Infected dermatoses (e.g., Impetigo/Infected eczema)|Moderately severe inflamed dermatoses with antiseptic-sensitive infection|Ocular inflammation (Conjunctivitis/Keratitis/Uveitis/Chorioretinal inflammation)|Infected ocular inflammation (e.g., Bacterial conjunctivitis/Blepharitis)|Severe infected ocular inflammation requiring mydriasis|Severe non-infectious ocular inflammation requiring mydriasis (e.g., Acute iridocyclitis)|Otitis externa/Eczema of external ear canal|Infected otitis externa/Ear canal dermatitis|Allergic rhinitis/Nasal polyps",
     "icd10_codes": [
       "K12.0",
-      "L43.3"
+      "K12.1",
+      "K05.1",
+      "K51.9",
+      "K50.9",
+      "I84.9",
+      "K62.8",
+      "J45.9",
+      "J44.9",
+      "M05.9",
+      "M32.9",
+      "E27.4",
+      "T78.4",
+      "L20.9",
+      "L30.9",
+      "L40.9",
+      "L43.9",
+      "L01.0",
+      "L08.9",
+      "H10.9",
+      "H16.9",
+      "H20.9",
+      "H30.9",
+      "H10.5",
+      "H10.0",
+      "H10.3",
+      "H20.0",
+      "H60.5",
+      "H60.9",
+      "J30.1",
+      "J30.3",
+      "J30.4",
+      "J33.9"
     ],
     "icd10_descriptions": {
       "K12.0": "Recurrent oral aphthae",
-      "L43.3": "Hypertrophic oral lichen planus"
+      "K12.1": "Other forms of stomatitis",
+      "K05.1": "Chronic gingivitis",
+      "K51.9": "Ulcerative colitis, unspecified",
+      "K50.9": "Crohn's disease, unspecified",
+      "I84.9": "Haemorrhoids, unspecified",
+      "K62.8": "Other specified diseases of anus and rectum",
+      "J45.9": "Asthma, unspecified",
+      "J44.9": "Chronic obstructive pulmonary disease, unspecified",
+      "M05.9": "Rheumatoid arthritis, unspecified",
+      "M32.9": "Systemic lupus erythematosus, unspecified",
+      "E27.4": "Other and unspecified adrenocortical insufficiency",
+      "T78.4": "Allergy, unspecified",
+      "L20.9": "Atopic dermatitis, unspecified",
+      "L30.9": "Dermatitis, unspecified",
+      "L40.9": "Psoriasis, unspecified",
+      "L43.9": "Lichen planus, unspecified",
+      "L01.0": "Impetigo",
+      "L08.9": "Local infection of skin and subcutaneous tissue, unspecified",
+      "H10.9": "Conjunctivitis, unspecified",
+      "H16.9": "Keratitis, unspecified",
+      "H20.9": "Iridocyclitis, unspecified",
+      "H30.9": "Chorioretinal inflammation, unspecified",
+      "H10.5": "Blepharoconjunctivitis, unspecified",
+      "H10.0": "Acute atopic conjunctivitis",
+      "H10.3": "Other acute conjunctivitis",
+      "H20.0": "Acute and subacute iridocyclitis",
+      "H60.5": "Acute noninfective otitis externa",
+      "H60.9": "Otitis externa, unspecified",
+      "J30.1": "Allergic rhinitis due to pollen",
+      "J30.3": "Other allergic rhinitis",
+      "J30.4": "Allergic rhinitis, unspecified",
+      "J33.9": "Nasal polyp, unspecified"
     },
     "indication_icd10_ranges": [
       "K00-K14",
-      "L40-L45"
+      "K50-K52",
+      "I80-I89",
+      "K60-K64",
+      "J40-J47",
+      "M00-M25",
+      "M30-M36",
+      "E20-E35",
+      "T78",
+      "L20-L30",
+      "L40-L45",
+      "L00-L08",
+      "H10-H13",
+      "H15-H19",
+      "H20-H22",
+      "H30-H36",
+      "H60-H62",
+      "J30-J39"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:39:18.663737"
+    "fetched_date": "2025-12-01T16:20:02.220317"
   },
   "naproxen": {
-    "code": "G02CC02",
+    "code": "G02CC02|M01AE02|M02AA12|M01AE57|M01AE52|M01AE56",
     "drug_name": "naproxen",
-    "who_name": "naproxen",
-    "drug_class": "Antiinflammatory products for vaginal administration",
-    "drug_classcode": "G02CC",
-    "therapeutic_category": "OTHER GYNECOLOGICALS",
-    "anatomical_group": "G",
-    "indication": "Dysmenorrhea/Arthritis/Musculoskeletal pain and inflammation",
+    "who_name": "naproxen|naproxen and diphenhydramine|naproxen and esomeprazole|naproxen and misoprostol",
+    "drug_class": "Antiinflammatory products for vaginal administration|Propionic acid derivatives|Antiinflammatory preparations, non-steroids for topical use",
+    "drug_classcode": "G02CC|M01AE|M02AA",
+    "therapeutic_category": "OTHER GYNECOLOGICALS|ANTIINFLAMMATORY AND ANTIRHEUMATIC PRODUCTS|TOPICAL PRODUCTS FOR JOINT AND MUSCULAR PAIN",
+    "anatomical_group": "G|M",
+    "indication": "Osteoarthritis/Rheumatoid arthritis/Ankylosing spondylitis/Acute gouty arthritis/Dysmenorrhea/Musculoskeletal pain/Headache/Fever|Localized musculoskeletal pain/Sprains/Strains/Tendinitis/Bursitis|Vulvovaginitis/Cervicitis/Vaginal inflammation",
     "icd10_codes": [
-      "N94.6",
       "M19.90",
       "M06.9",
-      "M79.6"
+      "M45.9",
+      "M10.00",
+      "N94.6",
+      "M79.609",
+      "M54.9",
+      "R51",
+      "R50.9",
+      "M77.9",
+      "M70.90",
+      "R52.9",
+      "N76.0",
+      "N76.1",
+      "N72"
     ],
     "icd10_descriptions": {
-      "N94.6": "Dysmenorrhoea, unspecified",
-      "M19.90": "Unspecified osteoarthritis, unspecified site",
+      "M19.90": "Osteoarthritis, unspecified",
       "M06.9": "Rheumatoid arthritis, unspecified",
-      "M79.6": "Pain in limb, hand, foot fingers and toes"
+      "M45.9": "Ankylosing spondylitis, unspecified",
+      "M10.00": "Idiopathic gout, unspecified site",
+      "N94.6": "Dysmenorrhea, unspecified",
+      "M79.609": "Pain in unspecified limb",
+      "M54.9": "Dorsalgia, unspecified",
+      "R51": "Headache",
+      "R50.9": "Fever, unspecified",
+      "M77.9": "Enthesopathy, unspecified",
+      "M70.90": "Unspecified bursitis, unspecified site",
+      "R52.9": "Unspecified pain",
+      "N76.0": "Acute vaginitis",
+      "N76.1": "Subacute and chronic vaginitis",
+      "N72": "Inflammatory disease of cervix uteri"
     },
     "indication_icd10_ranges": [
-      "N94-N96",
-      "M05-M14",
       "M15-M19",
-      "M70-M79"
+      "M05-M14",
+      "M45",
+      "M10",
+      "N94",
+      "M79",
+      "M54",
+      "R50-R69",
+      "M70-M77",
+      "N70-N77"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:39:32.188848"
+    "fetched_date": "2025-12-01T16:20:38.759941"
   },
   "acetaminophen oxycodone": {
-    "code": "N02AJ17",
+    "code": "R05CA01",
     "drug_name": "acetaminophen oxycodone",
-    "who_name": "oxycodone and paracetamol",
-    "drug_class": "Opioids in combination with non-opioid analgesics",
-    "drug_classcode": "N02AJ",
-    "therapeutic_category": "ANALGESICS",
-    "anatomical_group": "N",
-    "indication": "Moderate to severe acute pain/Moderate to severe chronic pain",
+    "who_name": "tyloxapol",
+    "drug_class": "Expectorants",
+    "drug_classcode": "R05CA",
+    "therapeutic_category": "COUGH AND COLD PREPARATIONS",
+    "anatomical_group": "R",
+    "indication": "Acute pain/Chronic pain/Moderate to severe pain",
     "icd10_codes": [
       "G89.11",
-      "G89.29"
+      "G89.21",
+      "R52.1",
+      "R52.2"
     ],
     "icd10_descriptions": {
       "G89.11": "Acute pain, not elsewhere classified",
-      "G89.29": "Other chronic pain"
+      "G89.21": "Chronic pain, not elsewhere classified",
+      "R52.1": "Chronic intractable pain",
+      "R52.2": "Other chronic pain"
     },
     "indication_icd10_ranges": [
-      "G89-G99"
+      "G80-G89",
+      "R50-R69"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:39:55.149796"
+    "fetched_date": "2025-12-01T16:21:13.654795"
   },
   "oxycodone": {
-    "code": "N02AA05",
+    "code": "N02AA05|N02AJ18|N02AJ19|N02AA55|N02AA56|N02AJ17",
     "drug_name": "oxycodone",
-    "who_name": "oxycodone",
-    "drug_class": "Natural opium alkaloids",
-    "drug_classcode": "N02AA",
+    "who_name": "oxycodone|oxycodone and acetylsalicylic acid|oxycodone and ibuprofen|oxycodone and naloxone|oxycodone and naltrexone|oxycodone and paracetamol",
+    "drug_class": "Natural opium alkaloids|Opioids in combination with non-opioid analgesics",
+    "drug_classcode": "N02AA|N02AJ",
     "therapeutic_category": "ANALGESICS",
     "anatomical_group": "N",
-    "indication": "Moderate to severe pain/Chronic pain",
+    "indication": "Severe acute pain/Severe chronic pain/Cancer-related pain/Post-operative pain|Moderate to severe acute pain/Moderate to severe chronic pain",
     "icd10_codes": [
-      "G89.1",
-      "G89.2",
-      "G89.4"
+      "R52.0",
+      "R52.2",
+      "G89.3",
+      "G89.18",
+      "G89.28"
     ],
     "icd10_descriptions": {
-      "G89.1": "Acute pain, not elsewhere classified",
-      "G89.2": "Chronic pain, not elsewhere classified",
-      "G89.4": "Chronic pain syndrome"
+      "R52.0": "Acute pain",
+      "R52.2": "Other chronic pain",
+      "G89.3": "Neoplasm-related pain (acute) (chronic)",
+      "G89.18": "Other acute postprocedural pain",
+      "G89.28": "Other chronic postprocedural pain"
     },
     "indication_icd10_ranges": [
-      "G80-G89"
+      "R50-R69",
+      "G80-G99"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:40:08.152677"
+    "fetched_date": "2025-12-01T16:21:46.931439"
   },
   "acetaminophen hydrocodone": {
     "code": "N02AJ22",
@@ -304,74 +493,108 @@
     "anatomical_group": "N",
     "indication": "Moderate to severe pain",
     "icd10_codes": [
-      "G89.18",
-      "G89.29",
-      "G89.3"
+      "G89.1",
+      "G89.2",
+      "R52.2",
+      "R52.9"
     ],
     "icd10_descriptions": {
-      "G89.18": "Acute post-procedural pain",
-      "G89.29": "Other chronic pain",
-      "G89.3": "Neoplasm related pain (acute)"
+      "G89.1": "Acute pain, not elsewhere classified",
+      "G89.2": "Chronic pain, not elsewhere classified",
+      "R52.2": "Other chronic pain",
+      "R52.9": "Pain, unspecified"
     },
     "indication_icd10_ranges": [
-      "G89-G89"
-    ],
-    "icd10_mapping_source": "llm_knowledge",
-    "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:40:31.789461"
-  },
-  "acetaminophen": {
-    "code": "N02BE01",
-    "drug_name": "acetaminophen",
-    "who_name": "paracetamol",
-    "drug_class": "Anilides",
-    "drug_classcode": "N02BE",
-    "therapeutic_category": "ANALGESICS",
-    "anatomical_group": "N",
-    "indication": "Pain/Fever",
-    "icd10_codes": [
-      "R52.9",
-      "R50.9",
-      "R51"
-    ],
-    "icd10_descriptions": {
-      "R52.9": "Unspecified pain",
-      "R50.9": "Fever, unspecified",
-      "R51": "Headache"
-    },
-    "indication_icd10_ranges": [
+      "G80-G89",
       "R50-R69"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:41:14.046017"
+    "fetched_date": "2025-12-01T15:55:11.861921"
   },
-  "ferrous": {
-    "code": "B03AD01",
-    "drug_name": "ferrous",
-    "who_name": "ferrous amino acid complex and folic acid",
-    "drug_class": "Iron in combination with folic acid",
-    "drug_classcode": "B03AD",
-    "therapeutic_category": "ANTIANEMIC PREPARATIONS",
-    "anatomical_group": "B",
-    "indication": "Iron deficiency anemia/Folic acid deficiency anemia/Anemia in pregnancy",
+  "acetaminophen": {
+    "code": "N02BE01|N02BE51|N02BE71",
+    "drug_name": "acetaminophen",
+    "who_name": "paracetamol|paracetamol, combinations excl. psycholeptics|paracetamol, combinations with psycholeptics",
+    "drug_class": "Anilides",
+    "drug_classcode": "N02BE",
+    "therapeutic_category": "ANALGESICS",
+    "anatomical_group": "N",
+    "indication": "Pain relief/Fever reduction|Common cold symptoms/Influenza symptoms/Headache/Mild to moderate pain|Moderate to severe pain",
     "icd10_codes": [
-      "D50.9",
-      "D52.9",
-      "O99.0"
+      "R52.0",
+      "R52.1",
+      "R52.2",
+      "G89.1",
+      "G89.2",
+      "R51",
+      "R50.9",
+      "J00",
+      "J11.1",
+      "M79.1",
+      "N94.6",
+      "M25.50"
     ],
     "icd10_descriptions": {
-      "D50.9": "Iron deficiency anemia, unspecified",
-      "D52.9": "Folate deficiency anemia, unspecified",
-      "O99.0": "Anemia complicating pregnancy, childbirth and the puerperium"
+      "R52.0": "Acute pain",
+      "R52.1": "Chronic intractable pain",
+      "R52.2": "Other chronic pain",
+      "G89.1": "Acute pain, not elsewhere classified",
+      "G89.2": "Chronic pain, not elsewhere classified",
+      "R51": "Headache",
+      "R50.9": "Fever, unspecified",
+      "J00": "Acute nasopharyngitis [common cold]",
+      "J11.1": "Influenza with other respiratory manifestations, virus not identified",
+      "M79.1": "Myalgia",
+      "N94.6": "Dysmenorrhoea, unspecified",
+      "M25.50": "Pain in unspecified joint"
     },
     "indication_icd10_ranges": [
-      "D50-D53",
-      "O99"
+      "R50-R69",
+      "G80-G99",
+      "J00-J06",
+      "J09-J18",
+      "M70-M79",
+      "N94-N98",
+      "M20-M25"
     ],
     "icd10_mapping_source": "llm_knowledge",
     "source": "WHO ATC/DDD Index",
-    "fetched_date": "2025-11-27T01:41:25.875221"
+    "fetched_date": "2025-12-01T16:23:04.346258"
+  },
+  "ferrous": {
+    "code": "B03AD01|B03AA10|B03AA09|B03AA04|B03AA05|B03AA02|B03AD02|B03AA03|B03AD05|B03AA01|B03AA11|B03AA12|B03AA06|B03AA07|B03AD03|B03AA08",
+    "drug_name": "ferrous",
+    "who_name": "ferrous amino acid complex and folic acid|ferrous ascorbate|ferrous aspartate|ferrous carbonate|ferrous chloride|ferrous fumarate|ferrous fumarate and folic acid|ferrous gluconate|ferrous gluconate and folic acid|ferrous glycine sulfate|ferrous iodine|ferrous sodium citrate|ferrous succinate|ferrous sulfate|ferrous sulfate and folic acid|ferrous tartrate",
+    "drug_class": "Iron in combination with folic acid|Iron bivalent, oral preparations",
+    "drug_classcode": "B03AD|B03AA",
+    "therapeutic_category": "ANTIANEMIC PREPARATIONS",
+    "anatomical_group": "B",
+    "indication": "Iron deficiency anemia|Iron deficiency anemia/Folate deficiency anemia",
+    "icd10_codes": [
+      "D50.0",
+      "D50.8",
+      "D50.9",
+      "D52.0",
+      "D52.1",
+      "D52.8",
+      "D52.9"
+    ],
+    "icd10_descriptions": {
+      "D50.0": "Iron deficiency anaemia secondary to blood loss (chronic)",
+      "D50.8": "Other iron deficiency anaemias",
+      "D50.9": "Iron deficiency anaemia, unspecified",
+      "D52.0": "Dietary folate deficiency anaemia",
+      "D52.1": "Drug-induced folate deficiency anaemia",
+      "D52.8": "Other folate deficiency anaemias",
+      "D52.9": "Folate deficiency anaemia, unspecified"
+    },
+    "indication_icd10_ranges": [
+      "D50-D53"
+    ],
+    "icd10_mapping_source": "llm_knowledge",
+    "source": "WHO ATC/DDD Index",
+    "fetched_date": "2025-12-01T16:23:50.759606"
   },
   "prednisone": {
     "code": "A07EA03",

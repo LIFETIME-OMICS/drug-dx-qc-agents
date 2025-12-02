@@ -279,6 +279,10 @@ async def extract_and_validate_drug(
     """
     Use agent to extract and validate a single drug name.
     
+    NOTE: This is an optional validation feature controlled by use_agent_validation parameter
+    in process_medications_file(). Production typically uses regex extraction (PHASE 2) only,
+    without agent validation (PHASE 3). Set use_agent_validation=True to enable.
+    
     Args:
         description: Medication description text
         model: Gemini model to use
@@ -482,28 +486,3 @@ async def process_medications_file(
     logger.info(f"Extraction complete: {successful} successful, {issues} with issues")
     
     return results_df
-
-
-# ============================================================================
-# CONVENIENCE WRAPPER FOR SYNC CALLS
-# ============================================================================
-
-def process_medications_file_sync(
-    input_file: str,
-    output_file: str = "tmp/drug_names_extracted.csv",
-    error_log: str = None,
-    model: str = "gemini-2.5-flash",
-    use_agent_validation: bool = False
-) -> pd.DataFrame:
-    """
-    Synchronous wrapper for process_medications_file.
-    
-    Use this if calling from non-async code.
-    """
-    return asyncio.run(process_medications_file(
-        input_file=input_file,
-        output_file=output_file,
-        error_log=error_log,
-        model=model,
-        use_agent_validation=use_agent_validation
-    ))
