@@ -38,6 +38,7 @@ QC_FLAGS_OUTPUT = str(OUTPUT_DIR / "qc_flags.csv")
 DRUG_CLASSIFICATIONS_OUTPUT = str(OUTPUT_DIR / "drug_classifications.csv")
 
 # Model configuration
+
 DEFAULT_MODEL = "gemini-2.5-flash"  # Use 2.0-flash version when out of tokens (use gemini-2.5-flash for latest)
 
 # Ensure directories exist
