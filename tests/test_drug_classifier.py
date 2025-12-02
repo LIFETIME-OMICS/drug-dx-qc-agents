@@ -20,10 +20,11 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from agents.drug_classifier import (
     classify_drug,
-    process_drug_names_file,
     create_drug_classifier_agent
 )
-from config import TMP_DIR
+from scripts.demo_qc_evaluator import evaluate_qc
+from config import TMP_DIR, DEFAULT_MODEL
+from tests.conftest import TEST_INPUT_FILES_TEST2, TEST_OUTPUT_FILES
 
 
 @pytest.fixture(scope="session")
@@ -50,17 +51,28 @@ class TestDrugClassifierOptimized:
         
         print(f"✅ Agent created with {len(agent.tools)} tools (pure LLM)")
     
-    def test_single_drug_classification(self, api_key_available):
-        """Test classify_drug() for single drug."""
+    def test_drug_classification_multi_formulation(self, api_key_available, test_drug_params):
+        """
+        Test classify_drug() with multi-formulation support.
+        
+        Parametrized test that runs for multiple drugs:
+        - amlodipine: 3 formulations (uses cache if available)
+        - fluticasone: 6+ formulations (forces re-fetch from WHO)
+        """
+        
+        drug_name = test_drug_params['drug_name']
+        skip_cache = test_drug_params['skip_cache']
+        min_formulations = test_drug_params['min_formulations']
         
         async def run_test():
-            # Test drug that should be in WHO database
-            result = await classify_drug("amlodipine")
+            result = await classify_drug(drug_name, skip_cache=skip_cache)
             
             print("\n" + "="*70)
-            print(f"Drug: amlodipine")
-            print(f"ATC Code: {result['code']}")
-            print(f"Drug Class: {result['drug_class']}")
+            print(f"Drug: {drug_name}")
+            print(f"ATC Codes: {result['code']}")
+            print(f"Drug Classes: {result['drug_class']}")
+            print(f"Therapeutic Categories: {result['therapeutic_category']}")
+            print(f"Anatomical Groups: {result['anatomical_group']}")
             print(f"Indication: {result['indication']}")
             print(f"ICD-10 Codes: {result['icd10_codes']}")
             print("="*70)
@@ -69,85 +81,74 @@ class TestDrugClassifierOptimized:
         
         result = asyncio.run(run_test())
         
-        # Verify result
-        assert result['code'] == 'C08CA01', f"Expected C08CA01, got {result['code']}"
-        assert 'Cardiovascular' in result['drug_class']
+        # Verify multi-formulation capture
+        codes = result['code'].split('|')
+        assert len(codes) >= min_formulations, \
+            f"Expected at least {min_formulations} ATC codes for {drug_name}, got {len(codes)}: {codes}"
+        
+        # Verify pipe separators used for multi-formulation
+        if len(codes) > 1:
+            assert '|' in result['code'], f"Expected pipe separators in ATC codes for {drug_name}"
+            assert '|' in result['drug_class'], f"Expected pipe separators in drug classes for {drug_name}"
+        
+        # Verify source and ICD-10 codes
         assert 'WHO' in result['source'], f"Expected WHO in source, got {result['source']}"
-        assert len(result['icd10_codes']) >= 2
+        assert len(result['icd10_codes']) >= 2, \
+            f"Expected at least 2 ICD-10 codes for {drug_name}, got {len(result['icd10_codes'])}"
         
-        print(f"\n✅ Single drug classification passed")
+        # Special validation for fluticasone (respiratory + dermatological)
+        if drug_name == 'fluticasone':
+            assert any('R03' in code for code in codes), \
+                f"Expected respiratory formulation (R03*) in {drug_name} codes: {codes}"
+            assert any('D07' in code for code in codes), \
+                f"Expected dermatological formulation (D07*) in {drug_name} codes: {codes}"
+            
+            icd_codes = result['icd10_codes']
+            has_respiratory = any(code.startswith('J') for code in icd_codes)
+            has_dermatology = any(code.startswith('L') for code in icd_codes)
+            assert has_respiratory and has_dermatology, \
+                f"Expected both respiratory (J*) and dermatological (L*) ICD-10 codes for {drug_name}"
+        
+        print(f"\n✅ {drug_name} classification passed - {len(codes)} formulations")
     
-    def test_batch_classification_optimized(self, api_key_available):
+    def test_qc_evaluation(self, api_key_available):
         """
-        Test production function: process_drug_names_file_optimized()
+        Test QC evaluation with multi-formulation drug database.
         
-        This tests the ACTUAL production pattern with cost optimization.
-        Creates persistent output file in tmp/ directory for inspection.
+        This tests the full pipeline: medications → conditions → QC evaluation
+        using the updated ATC database with pipe-separated multi-formulation support.
         """
-        
-        # Input file from drug_identifier (in tests/tmp/)
-        input_file = Path("tests/tmp/drug_names_extracted_agent_orchestration.csv")
-        
-        if not input_file.exists():
-            pytest.skip(f"Input file not found: {input_file}\nRun test_drug_identifier2.py first!")
-        
-        # Output file (persistent in tests/tmp/ for inspection)
-        output_file = Path("tests/tmp/drug_classifications_optimized.csv")
-        
-        # Clean output
-        if output_file.exists():
-            output_file.unlink()
         
         print("\n" + "="*70)
-        print("🔬 TESTING OPTIMIZED BATCH PROCESSING")
+        print("🔬 TESTING QC EVALUATION WITH MULTI-FORMULATION DATABASE")
         print("="*70)
-        print(f"Input:  {input_file}")
-        print(f"Output: {output_file}")
+        print(f"Using model: {DEFAULT_MODEL}")
         print("="*70)
         
-        # Run production function
-        result_df = process_drug_names_file(
-            input_file=str(input_file),
-            output_file=str(output_file),
-            model="gemini-2.5-flash"
-        )
+        # Run QC evaluation (uses examples/atc_database.json with multi-formulation data)
+        results = evaluate_qc()
         
-        # Verify output file
-        assert output_file.exists(), f"Output file not created"
+        # Verify results structure
+        assert results is not None, "QC evaluation returned None"
         
-        # Verify structure
-        assert 'drug_name' in result_df.columns
-        assert 'atc_code' in result_df.columns
-        assert 'atc_class' in result_df.columns
-        assert 'indication' in result_df.columns
-        assert 'icd10_codes' in result_df.columns
-        
-        # Verify we have data
-        assert len(result_df) >= 3, f"Expected at least 3 rows, got {len(result_df)}"
-        
-        # Verify known drugs
-        drug_names = set(result_df['drug_name'].str.lower())
-        assert 'amlodipine' in drug_names
-        assert 'lisinopril' in drug_names
-        
-        print(f"\n✅ Batch processing passed")
-        print(f"   Processed {len(result_df)} drugs")
+        print(f"\n✅ QC Evaluation completed")
+        print(f"   Check output/qc_flags.csv for results")
     
-    def test_compare_with_baseline(self, baseline_files):
+    def test_compare_with_baseline(self, baseline_files_test2):
         """
-        Compare optimized output with baseline.
+        Compare drug classifications with baseline.
         
-        This validates that the optimized approach produces
-        equivalent results to the baseline.
+        This validates that the multi-formulation approach produces
+        expected results by comparing against baseline drug classifications.
         """
         
-        # Output from previous test (persistent file in tests/tmp/)
-        output_file = Path("tests/tmp/drug_classifications_optimized.csv")
-        baseline_file = baseline_files['drug_classifications']
+        # Output from drug classification
+        output_file = Path("output/drug_classifications.csv")
+        baseline_file = baseline_files_test2['drug_classifications']
         
         # Verify files exist
         if not output_file.exists():
-            pytest.skip("Run test_batch_classification_optimized first")
+            pytest.skip("Run build_atc_database.py first to generate drug_classifications.csv")
         
         assert baseline_file.exists(), f"Baseline not found: {baseline_file}"
         
@@ -156,47 +157,100 @@ class TestDrugClassifierOptimized:
         baseline_df = pd.read_csv(str(baseline_file))
         
         print("\n" + "="*70)
-        print("📊 COMPARING OPTIMIZED OUTPUT WITH BASELINE")
+        print("📊 COMPARING DRUG CLASSIFICATIONS WITH BASELINE")
         print("="*70)
-        print(f"Optimized: {len(result_df)} rows")
-        print(f"Baseline:  {len(baseline_df)} rows")
+        print(f"Current results: {len(result_df)} medications")
+        print(f"Baseline:        {len(baseline_df)} medications")
         
-        # Compare drug names
-        result_drugs = set(result_df['drug_name'].str.lower())
-        baseline_drugs = set(baseline_df['drug_name'].str.lower())
+        # Calculate classification rates
+        current_classified = len(result_df[result_df['source'] != 'NOT_FOUND'])
+        baseline_classified = len(baseline_df[baseline_df['source'] != 'NOT_FOUND'])
         
-        matching_drugs = result_drugs & baseline_drugs
-        missing_drugs = baseline_drugs - result_drugs
+        current_rate = current_classified / len(result_df) if len(result_df) > 0 else 0
+        baseline_rate = baseline_classified / len(baseline_df) if len(baseline_df) > 0 else 0
         
-        # Match rate
-        match_rate = len(matching_drugs) / len(baseline_drugs) if baseline_drugs else 0
+        print(f"\n📈 Classification Rates:")
+        print(f"   Current:  {current_rate:.1%} ({current_classified}/{len(result_df)})")
+        print(f"   Baseline: {baseline_rate:.1%} ({baseline_classified}/{len(baseline_df)})")
         
-        # Compare ATC codes
-        atc_matches = 0
-        for drug in matching_drugs:
-            result_atc = result_df[result_df['drug_name'].str.lower() == drug]['atc_code'].values
-            baseline_atc = baseline_df[baseline_df['drug_name'].str.lower() == drug]['atc_code'].values
+        # Compare all drugs' ICD-10 codes
+        print(f"\n🔍 Comparing ICD-10 codes for all drugs:")
+        mismatches = []
+        for _, baseline_row in baseline_df.iterrows():
+            drug_name = baseline_row['drug_name']
+            current_row = result_df[result_df['drug_name'] == drug_name]
             
-            if len(result_atc) > 0 and len(baseline_atc) > 0:
-                if result_atc[0] == baseline_atc[0]:
-                    atc_matches += 1
+            if not current_row.empty:
+                current_icd10 = current_row.iloc[0]['icd10_codes']
+                baseline_icd10 = baseline_row['icd10_codes']
+                
+                # Handle NaN values (both should be NaN for NOT_FOUND drugs)
+                current_is_nan = pd.isna(current_icd10)
+                baseline_is_nan = pd.isna(baseline_icd10)
+                
+                # Only count as mismatch if one is NaN and the other isn't, or if both are non-NaN and different
+                if current_is_nan != baseline_is_nan or (not current_is_nan and not baseline_is_nan and current_icd10 != baseline_icd10):
+                    mismatches.append({
+                        'drug': drug_name,
+                        'current': current_icd10,
+                        'baseline': baseline_icd10
+                    })
         
-        atc_match_rate = atc_matches / len(matching_drugs) if matching_drugs else 0
+        if mismatches:
+            print(f"   ⚠️  Found {len(mismatches)} ICD-10 code mismatches:")
+            for mismatch in mismatches:
+                print(f"      {mismatch['drug']}:")
+                print(f"        Current:  {mismatch['current']}")
+                print(f"        Baseline: {mismatch['baseline']}")
+            assert False, f"ICD-10 codes do not match baseline for {len(mismatches)} drugs"
+        else:
+            print(f"   ✅ All ICD-10 codes match baseline")
         
-        print(f"\n📈 Comparison Metrics:")
-        print(f"   ✅ Drug match rate: {match_rate:.1%}")
-        print(f"   🔬 ATC code accuracy: {atc_match_rate:.1%}")
+        # Compare fluticasone propionate specifically (multi-formulation drug)
+        fluticasone_current = result_df[result_df['drug_name'].str.contains('fluticasone propionate', case=False, na=False)]
+        fluticasone_baseline = baseline_df[baseline_df['drug_name'].str.contains('fluticasone propionate', case=False, na=False)]
         
-        if missing_drugs:
-            print(f"   ⚠️  Missing: {', '.join(sorted(missing_drugs))}")
+        if not fluticasone_current.empty and not fluticasone_baseline.empty:
+            current_data = fluticasone_current.iloc[0]
+            baseline_data = fluticasone_baseline.iloc[0]
+            
+            print(f"\n🔬 Fluticasone Propionate (multi-formulation drug):")
+            print(f"   Current ATC codes:  {current_data['atc_code']}")
+            print(f"   Baseline ATC codes: {baseline_data['atc_code']}")
+            
+            # Count formulations (pipe-separated)
+            current_codes = current_data['atc_code'].split('|') if pd.notna(current_data['atc_code']) else []
+            baseline_codes = baseline_data['atc_code'].split('|') if pd.notna(baseline_data['atc_code']) else []
+            
+            print(f"   Current formulations:  {len(current_codes)}")
+            print(f"   Baseline formulations: {len(baseline_codes)}")
+            
+            # Verify multi-formulation support
+            assert len(current_codes) >= 3, f"Expected at least 3 formulations for fluticasone propionate, got {len(current_codes)}"
+            
+            # Check for respiratory codes (R03*)
+            has_respiratory = any('R03' in code for code in current_codes)
+            assert has_respiratory, f"Expected respiratory formulation (R03*) in fluticasone propionate codes: {current_codes}"
+            
+            # Check for dermatological codes (D07*)
+            has_dermatological = any('D07' in code for code in current_codes)
+            assert has_dermatological, f"Expected dermatological formulation (D07*) in fluticasone propionate codes: {current_codes}"
+            
+            # Compare ICD-10 codes
+            current_icd10 = current_data['icd10_codes']
+            baseline_icd10 = baseline_data['icd10_codes']
+            print(f"   Current ICD-10 codes:  {current_icd10}")
+            print(f"   Baseline ICD-10 codes: {baseline_icd10}")
+            
+            # Verify ICD-10 codes match
+            assert current_icd10 == baseline_icd10, \
+                f"ICD-10 codes mismatch for fluticasone propionate:\n  Current:  {current_icd10}\n  Baseline: {baseline_icd10}"
+            
+            print(f"   ✅ Multi-formulation support validated")
+            print(f"   ✅ Contains respiratory (R03*) and dermatological (D07*) codes")
+            print(f"   ✅ ICD-10 codes match baseline")
         
-        # Assert quality thresholds
-        assert match_rate >= 0.80, f"Match rate too low: {match_rate:.1%}"
-        assert atc_match_rate >= 0.70, f"ATC accuracy too low: {atc_match_rate:.1%}"
-        
-        print(f"\n✅ Comparison passed!")
-        print(f"   Optimized approach produces equivalent results")
-        print(f"   With significantly reduced agent calls!")
+        print(f"\n✅ Baseline comparison passed!")
 
 
 if __name__ == "__main__":

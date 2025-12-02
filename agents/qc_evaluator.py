@@ -69,9 +69,12 @@ WORKFLOW FOR EACH MEDICATION:
    - List expected ICD-10 code ranges (e.g., "I10-I15" for hypertension)
 
 3. Extract and map diagnosis information
-   - If a condition/diagnosis is provided, extract the SNOMED CT code
+   - FIRST: Check the medication's "reasondescription" field, use as the diagnosis, the PRIMARY reason for prescribing
+   - SECOND: If reasondescription is empty or unclear, check the CONDITION data
+   - Extract the SNOMED CT code from whichever source provides the medical diagnosis
    - Map SNOMED CT to ICD-10 code(s) using your medical coding knowledge
-   - If no condition is provided, check if medication reasondescription suggests a diagnosis
+   - NOTE: CONDITION data may include non-medical social determinants (e.g., "Part-time employment", "Housing unsatisfactory")
+   - These social determinants are NOT medical diagnoses and should be ignored when evaluating medication appropriateness
 
 4. Compare medication indication to diagnosis
    - Status: "PASS" if diagnosis matches drug indication, "FAIL" if no match

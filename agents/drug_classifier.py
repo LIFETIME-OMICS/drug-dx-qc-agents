@@ -177,67 +177,93 @@ def fetch_atc_from_who(drug_name: str) -> Optional[Dict]:
         if not soup:
             return None
 
-        # Step 3: Extract ATC code from the table
+        # Step 3: Extract ALL ATC codes from the table (not just first row)
         table = soup.find("table")
         if not table:
             return None
-        first_row = table.find("tr")
-        if not first_row:
-            logger.debug(f"No first row in table for: {drug_name}")
-            return None
-
-        cells = first_row.find_all("td")
-        if len(cells) < 2:
-            logger.debug(f"Insufficient cells in first row for: {drug_name}")
-            return None
-
-        atc_code = cells[0].get_text(strip=True)
-        who_drug_name = cells[1].get_text(strip=True)
         
-        # Validate ATC code format: Letter + 2 digits + 2 letters + 2 digits (e.g., C08CA01)
-        atc_pattern = r'^[A-Z]\d{2}[A-Z]{2}\d{2}$'
-        if not re.match(atc_pattern, atc_code):
-            logger.debug(f"Invalid ATC code format '{atc_code}' for: {drug_name}")
+        all_rows = table.find_all("tr")
+        if not all_rows:
+            logger.debug(f"No rows in table for: {drug_name}")
             return None
 
-        # Step 3: Follow the ATC code link
-        code_url = f"https://atcddd.fhi.no/atc_ddd_index/?code={atc_code}"
-        code_resp = requests.get(code_url, timeout=10)
-        code_resp.raise_for_status()
-        code_soup = BeautifulSoup(code_resp.text, "html.parser")
-
-        # Step 4: Parse therapeutic and chemical subgroup from page text
-        # The hierarchy appears as text lines, not in a table
-        drug_class = None  # Level 4 - Chemical subgroup
-        drug_classcode = atc_code[:5]  # Level 4 code (5 chars)
-        therapeutic_category = None  # Level 2 - Therapeutic subgroup
-
-        # Parse hierarchy from text lines
-        text = code_soup.get_text()
-        for line in text.split('\n'):
-            line = line.strip()
-            # Level 2: 3-char code like "C08 CALCIUM CHANNEL BLOCKERS"
-            if len(line) >= 4 and re.match(r'^[A-Z]\d{2}\s', line):
-                if line[:3] == atc_code[:3]:
-                    therapeutic_category = line[4:].strip()
-            # Level 4: 5-char code like "C08CA Dihydropyridine derivatives"
-            elif len(line) >= 6 and re.match(r'^[A-Z]\d{2}[A-Z]{2}\s', line):
-                if line[:5] == atc_code[:5]:
-                    drug_class = line[6:].strip()
-
-
-        # Step 5: Build result dictionary
+        # Collect data from ALL formulations
+        atc_pattern = r'^[A-Z]\d{2}[A-Z]{2}\d{2}$'
+        formulations = []
+        
+        for row in all_rows:
+            cells = row.find_all("td")
+            if len(cells) < 2:
+                continue
+                
+            atc_code = cells[0].get_text(strip=True)
+            who_name = cells[1].get_text(strip=True)
+            
+            # Validate ATC code format
+            if not re.match(atc_pattern, atc_code):
+                continue
+            
+            # Follow ATC code link to get hierarchy
+            try:
+                code_url = f"https://atcddd.fhi.no/atc_ddd_index/?code={atc_code}"
+                code_resp = requests.get(code_url, timeout=10)
+                code_resp.raise_for_status()
+                code_soup = BeautifulSoup(code_resp.text, "html.parser")
+                
+                # Parse therapeutic and chemical subgroup from page text
+                drug_class = None
+                therapeutic_category = None
+                text = code_soup.get_text()
+                
+                for line in text.split('\n'):
+                    line = line.strip()
+                    # Level 2: 3-char code like "C08 CALCIUM CHANNEL BLOCKERS"
+                    if len(line) >= 4 and re.match(r'^[A-Z]\d{2}\s', line):
+                        if line[:3] == atc_code[:3]:
+                            therapeutic_category = line[4:].strip()
+                    # Level 4: 5-char code like "C08CA Dihydropyridine derivatives"
+                    elif len(line) >= 6 and re.match(r'^[A-Z]\d{2}[A-Z]{2}\s', line):
+                        if line[:5] == atc_code[:5]:
+                            drug_class = line[6:].strip()
+                
+                formulations.append({
+                    "code": atc_code,
+                    "who_name": who_name,
+                    "drug_class": drug_class or "Unknown",
+                    "drug_classcode": atc_code[:5],
+                    "therapeutic_category": therapeutic_category or "Unknown",
+                    "anatomical_group": atc_code[0]
+                })
+                
+            except Exception as e:
+                logger.debug(f"Failed to fetch details for {atc_code}: {e}")
+                continue
+        
+        if not formulations:
+            logger.debug(f"No valid formulations found for: {drug_name}")
+            return None
+        
+        # Step 4: Concatenate all formulations with deduplication
+        # Use dict to maintain order while removing duplicates
+        codes_dict = {f["code"]: None for f in formulations}
+        names_dict = {f["who_name"]: None for f in formulations}
+        classes_dict = {f["drug_class"]: None for f in formulations}
+        classcodes_dict = {f["drug_classcode"]: None for f in formulations}
+        categories_dict = {f["therapeutic_category"]: None for f in formulations}
+        groups_dict = {f["anatomical_group"]: None for f in formulations}
+        
+        # Step 5: Build result dictionary with pipe-separated values
         result = {
-            "code": atc_code,
-            "who_name": who_drug_name,  # WHO's official drug name
-            "drug_class": drug_class or "Unknown",  # Level 4 description
-            "drug_classcode": drug_classcode or atc_code[:5],  # Level 4 code
-            "therapeutic_category": therapeutic_category or "Unknown",  # Level 2 description
-            "anatomical_group": atc_code[0] if atc_code else "?",
+            "code": '|'.join(codes_dict.keys()),
+            "who_name": '|'.join(names_dict.keys()),
+            "drug_class": '|'.join(classes_dict.keys()),
+            "drug_classcode": '|'.join(classcodes_dict.keys()),
+            "therapeutic_category": '|'.join(categories_dict.keys()),
+            "anatomical_group": '|'.join(groups_dict.keys()),
             "source": "WHO ATC/DDD Index",
             "fetched_date": pd.Timestamp.now().isoformat()
         }
-        logger.debug(f"WHO lookup successful for '{drug_name}': {atc_code}")
+        logger.debug(f"WHO lookup successful for '{drug_name}': found {len(formulations)} formulations")
         return result
         
     except Exception as e:
@@ -274,35 +300,35 @@ def create_drug_classifier_agent(model: str = "gemini-2.5-flash") -> Agent:
     agent = Agent(
         model=model,
         tools=[],  # No tools needed - pure LLM knowledge
-        instruction="""You are a pharmaceutical and medical coding expert.
-
-You will be asked to perform ONE of the following tasks:
-
-**TASK 1: Generate Drug Synonyms**
-When asked to generate synonyms for a drug name, provide 2-3 international (INN) or common alternatives:
-- Consider US vs international names (acetaminophen↔paracetamol)
-- Consider chemical variations (adrenaline↔epinephrine)
-- Consider brand vs generic names
-Return ONLY a pipe-delimited list with NO extra text: synonym1|synonym2|synonym3
-
-**TASK 2: ICD-10 Enrichment**
-When given an ATC code and drug information, provide ICD-10 coding:
+        instruction="""You are a drug classification expert assistant helping to enrich drug data with ICD-10 codes.
+    
+    Your task:
+    1. Given a drug name, ATC code, and WHO classification data
+    2. Provide ICD-10 enrichment: indication, ICD-10 codes, descriptions, and ranges
+    3. Return data in JSON format
+    
+    Drug may have multiple formulations with pipe-separated drug classes (e.g., 'Corticosteroids|Nasal preparations|Bronchodilators').
+    When this occurs, provide indications for each formulation separated by pipes (|), while using forward slashes (/) for related conditions within the same indication.
+    Example: 'Atopic dermatitis/Psoriasis|Allergic rhinitis/Nasal polyps|Asthma/COPD'
 
 Required fields:
-- indication: Primary therapeutic use(s), separated by /
-- icd10_codes: 2-4 specific ICD-10 codes as array ["I10", "I20.9"]
-- icd10_descriptions: Object mapping codes to descriptions
-- indication_icd10_ranges: ICD-10 chapter ranges ["I10-I15", "I20-I25"]
+- indication: Use PIPE (|) to separate different formulations, use / for related conditions within same formulation
+- icd10_codes: Comprehensive array of specific ICD-10 codes covering all formulations ["L20.9", "J45.9", "J30.1"]
+- icd10_descriptions: Object mapping ALL codes to descriptions
+- indication_icd10_ranges: ICD-10 chapter ranges for all indications ["L20-L30", "J40-J47", "J30-J39"]
 
-Return as JSON object:
+Example for multi-formulation drug (fluticasone - has dermatological, nasal, and respiratory formulations):
 {
-  "indication": "Hypertension/Angina pectoris",
-  "icd10_codes": ["I10", "I20.9"],
+  "indication": "Atopic dermatitis/Psoriasis|Allergic rhinitis/Nasal polyps|Asthma/COPD",
+  "icd10_codes": ["L20.9", "L40.9", "J30.1", "J45.9", "J44.9"],
   "icd10_descriptions": {
-    "I10": "Essential (primary) hypertension",
-    "I20.9": "Angina pectoris, unspecified"
+    "L20.9": "Atopic dermatitis, unspecified",
+    "L40.9": "Psoriasis, unspecified",
+    "J30.1": "Allergic rhinitis due to pollen",
+    "J45.9": "Asthma, unspecified",
+    "J44.9": "Chronic obstructive pulmonary disease, unspecified"
   },
-  "indication_icd10_ranges": ["I10-I15", "I20-I25"]
+  "indication_icd10_ranges": ["L20-L30", "L40-L45", "J30-J39", "J40-J47"]
 }
 
 Perform ONLY the task requested in the prompt. Use your medical knowledge for accurate results.""",
@@ -319,7 +345,8 @@ Perform ONLY the task requested in the prompt. Use your medical knowledge for ac
 async def classify_drug(
     drug_name: str,
     atc_db_path: str = ATC_DATABASE_PATH,
-    model: str = "gemini-2.5-flash"
+    model: str = "gemini-2.5-flash",
+    skip_cache: bool = False
 ) -> Dict:
     """
     Classify a single drug using optimized pattern with minimal agent calls.
@@ -335,18 +362,20 @@ async def classify_drug(
         drug_name: Name of drug to classify
         atc_db_path: Path to ATC cache database
         model: Gemini model name
+        skip_cache: If True, skip cache check and re-fetch from WHO
         
     Returns:
         Dict with complete classification including ATC code, drug_class (Level 4), 
         therapeutic_category (Level 3), and ICD-10 codes
     """
     
-    # Step 1: Check cache (Python - NO agent call)
+    # Step 1: Check cache (Python - NO agent call) - unless skip_cache is True
     atc_db = load_atc_database(atc_db_path)
-    cached = atc_db.get(drug_name.lower())
-    if cached:
-        logger.info(f"✅ Cache hit: {drug_name}")
-        return cached
+    if not skip_cache:
+        cached = atc_db.get(drug_name.lower())
+        if cached:
+            logger.info(f"✅ Cache hit: {drug_name}")
+            return cached
     
     # Step 2: Try WHO lookup (Python - NO agent call)
     who_result = fetch_atc_from_who(drug_name)
@@ -423,12 +452,28 @@ async def _enrich_with_icd10(drug_name: str, who_result: Dict, model: str) -> Di
     agent = create_drug_classifier_agent(model=model)
     runner = InMemoryRunner(agent=agent)
 
+    # Handle multi-formulation drugs with pipe-separated data
+    # Extract all drug classes to understand different formulations
+    drug_classes = who_result['drug_class'].split('|')
+    atc_codes = who_result['code'].split('|')
+    
+    # Build comprehensive prompt for multi-formulation enrichment
+    if len(drug_classes) > 1:
+        formulation_note = f"\nNote: This drug has {len(drug_classes)} formulations with different indications. Consider all formulations when providing ICD-10 codes."
+    else:
+        formulation_note = ""
+
     prompt = (
         f"Provide ICD-10 enrichment for:\n"
         f"Drug: {drug_name}\n"
-        f"ATC Code: {who_result['code']}\n"
-        f"WHO Name: {who_result['who_name']}\n\n"
-        "Return JSON with: indication, icd10_codes, icd10_descriptions, indication_icd10_ranges"
+        f"ATC Code(s): {who_result['code']}\n"
+        f"WHO Name: {who_result['who_name']}\n"
+        f"Drug Class: {who_result['drug_class']}{formulation_note}\n\n"
+        "IMPORTANT: Use PIPE character (|) to separate different formulations' indications. Use forward slash (/) only for related conditions within the same formulation.\n"
+        "Example: 'Atopic dermatitis/Psoriasis|Allergic rhinitis/Nasal polyps|Asthma/COPD'\n\n"
+        "Return JSON with: indication (pipe-separated for different formulations), "
+        "icd10_codes (all relevant codes as array), icd10_descriptions (object mapping codes to descriptions), "
+        "indication_icd10_ranges (all relevant ranges as array)"
     )
 
     response = await runner.run_debug(prompt, quiet=True)
@@ -628,7 +673,8 @@ def process_drug_names_file(
                 result = await classify_drug(
                     drug_name=drug_name,
                     atc_db_path=ATC_DATABASE_PATH,
-                    model=model
+                    model=model,
+                    skip_cache=(update == "always")
                 )
                 
                 # Track stats
