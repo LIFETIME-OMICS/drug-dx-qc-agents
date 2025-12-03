@@ -135,7 +135,7 @@ create `.env` file as in `.env.example` and add GOOGLE_API_KEY
          │  (10-second delay)  │          │   Result     │
          └──────────┬──────────┘          └──────────────┘
                     │
-                    ├─── Found? ─────> Auto-save & Return
+                    ├─── Found? ─────> Go to Step 4.
                     │
                     ▼ Not Found
          ┌──────────────────────┐
