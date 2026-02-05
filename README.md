@@ -189,7 +189,7 @@ The `drug_classifier` agent automatically:
 
 ### Usage
 
-**First Run: 2 agent drug classification pipeline**
+**First Run: 2-agent drug classification pipeline**
 ```bash
 # From an input of a medications csv file (test on short file: medications_synthetic_short_8.csv.csv), 
 # it generates:  
